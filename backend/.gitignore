@@ -1,0 +1,105 @@
+# =========================
+# DJANGO
+# =========================
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+staticfiles/
+
+# Migrations (optionnel, enlève si tu veux les versionner)
+# */migrations/
+# !*/migrations/__init__.py
+
+# =========================
+# ENVIRONNEMENT
+# =========================
+.env
+.env.*
+.venv/
+venv/
+ENV/
+env/
+virtualenv/
+
+# =========================
+# PYTHON
+# =========================
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# =========================
+# DJANGO SETTINGS SECRETS
+# =========================
+local_settings.py
+settings_local.py
+
+# =========================
+# CACHES & SESSIONS
+# =========================
+.cache/
+.cache/*
+celerybeat-schedule
+celerybeat.pid
+
+# =========================
+# DJANGO REST / JWT
+# =========================
+*.jwt
+*.token
+
+# =========================
+# UPLOADS
+# =========================
+media/uploads/
+media/profiles/
+media/products/
+
+# =========================
+# NODE / FRONT (si présent)
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# IDE / EDITORS
+# =========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# TESTS / COVERAGE
+# =========================
+htmlcov/
+.tox/
+.coverage
+coverage.xml
+
+# =========================
+# DOCKER
+# =========================
+docker-compose.override.yml
+
+# =========================
+# SWAGGER / SPECTACULAR
+# =========================
+schema.yml
+schema.json

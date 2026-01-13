@@ -1,0 +1,34 @@
+✅ créer le projet django
+✅ créer les apps (users, social, products, orders)
+✅ configurer django rest framework
+✅ créer les serializers
+✅ créer les views / viewsets
+✅ créer les routes (urls)
+✅ créer les api
+✅ ajouter la documentation swagger
+✅ intégrer login et register (jwt)
+✅ créer le model User (username, email, phone, role, photo, bio, stand_name, specialties)
+✅ api inscription
+✅ api login
+✅ api profil
+✅ update profil (photo, bio, etc.)
+✅ créer le model Product (artisan, name, description, price, category, stock, photo, tags, is_limited_edition, origin)
+✅ api catalogue
+✅ api détail produit
+✅ api ajouter produit (artisan)
+✅ recherche produit
+✅ corriger débordement sur catalogue
+✅ retirer événement et service
+✅ déplacer bouton blog sur home
+✅ page profil artisan charge à l’infini
+✅ améliorer page profil
+✅  ajouter produit artisan (avec photo)
+✅  ajouter produit artisan directement dans la bd 
+
+
+❌chat ( ecrire , note vocale , envoyer photo )
+❌bug bouton retour
+❌commander ( recu de paiement et historique de paiement , livraison ect )
+❌video sur les blogs
+❌voir nos commandes effectuee
+

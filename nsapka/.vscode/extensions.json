@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "dart-code.dart-code",
+    "dart-code.flutter",
+    "alexisvt.flutter-snippets",
+    "nash.awesome-flutter-snippets"
+  ],
+  "unwantedRecommendations": [
+    "streetsidesoftware.code-spell-checker"
+  ]
+}

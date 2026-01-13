@@ -1,0 +1,86 @@
+{
+  // Désactiver le vérificateur d'orthographe
+  "cSpell.enabled": false,
+  
+  // Configuration Flutter
+  "dart.flutterSdkPath": null,
+  "dart.previewFlutterUiGuides": true,
+  "dart.previewFlutterUiGuidesCustomTracking": true,
+  
+  // Formatage automatique
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  
+  // Suggestions
+  "editor.quickSuggestions": {
+    "other": true,
+    "comments": false,
+    "strings": true
+  },
+  
+  // Exclusions pour le spell checker (si activé plus tard)
+  "cSpell.words": [
+    "nsapka",
+    "NSAPKA",
+    "sapka",
+    "onboarding",
+    "artisan",
+    "artisans",
+    "acheteur",
+    "acheteurs",
+    "pubspec",
+    "gradlew",
+    "androidx",
+    "cupertino",
+    "FCFA",
+    "Baoulé",
+    "Bassam"
+  ],
+  
+  // Ignorer certains fichiers pour le spell check
+  "cSpell.ignorePaths": [
+    "node_modules",
+    "**/node_modules",
+    "**/node_modules/**",
+    "node_modules/**",
+    "vscode-extension",
+    ".git",
+    "*.dll",
+    "*.exe",
+    "*.bin",
+    "build/**",
+    ".dart_tool/**",
+    "pubspec.lock",
+    "*.g.dart"
+  ],
+  
+  // Langues pour le spell checker (si activé)
+  "cSpell.language": "en,fr",
+  
+  // Désactiver les diagnostics de spell check
+  "cSpell.diagnosticLevel": "Hint",
+  
+  // Configuration Dart/Flutter
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [80],
+    "editor.selectionHighlight": false,
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.suggestSelection": "first",
+    "editor.tabCompletion": "onlySnippets",
+    "editor.wordBasedSuggestions": "off"
+  },
+  
+  // Fichiers à exclure de l'explorateur
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/.packages": true,
+    "**/build": true
+  },
+  
+  // Associations de fichiers
+  "files.associations": {
+    "*.dart": "dart"
+  }
+}
