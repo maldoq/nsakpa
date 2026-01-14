@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nsapka/core/services/api_service.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/data/mock_data.dart';
 import '../../../core/models/order_model.dart';
 
 class DeliveryTrackingScreen extends StatefulWidget {
@@ -17,37 +17,69 @@ class DeliveryTrackingScreen extends StatefulWidget {
 
 class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
     with SingleTickerProviderStateMixin {
-  late OrderModel order;
+  OrderModel? order;
+  bool isLoading = true;
   late AnimationController _animationController;
-  late Animation<double> _progressAnimation;
+  Animation<double>? _progressAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    // Trouver la commande
-    order = MockData.orders.firstWhere(
-      (o) => o.id == widget.orderId,
-      orElse: () => throw Exception('Commande non trouvée'),
-    );
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    _progressAnimation = Tween<double>(
-      begin: 0.0,
-      end: order.deliveryProgress,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _loadOrder();
+  }
 
-    // Démarrer l'animation après un court délai
-    Future.delayed(const Duration(milliseconds: 300), () {
-      _animationController.forward();
-    });
+  Future<void> _loadOrder() async {
+    setState(() => isLoading = true);
+
+    try {
+      // Charger toutes les commandes et trouver celle qui correspond
+      final allOrders = await ApiService.getMyOrders();
+      final foundOrder = allOrders.firstWhere(
+        (o) => o.id == widget.orderId,
+        orElse: () => throw Exception('Commande non trouvée'),
+      );
+
+      if (mounted) {
+        setState(() {
+          order = foundOrder;
+          isLoading = false;
+        });
+
+        // Initialiser l'animation avec la progression de la commande
+        _progressAnimation = Tween<double>(
+          begin: 0.0,
+          end: foundOrder.deliveryProgress,
+        ).animate(CurvedAnimation(
+          parent: _animationController,
+          curve: Curves.easeInOut,
+        ));
+
+        // Démarrer l'animation après un court délai
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            _animationController.forward();
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('❌ Erreur chargement commande: $e');
+      if (mounted) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    }
   }
 
   @override
@@ -58,6 +90,27 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
 
   @override
   Widget build(BuildContext context) {
+    // État de chargement
+    if (isLoading || order == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Suivi de livraison'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.textWhite,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+            tooltip: 'Retour',
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    // Contenu principal
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -70,41 +123,31 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
           tooltip: 'Retour',
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // En-tête de la commande
-            _buildOrderHeader(),
-
-            const SizedBox(height: 24),
-
-            // Barre de progression
-            _buildProgressBar(),
-
-            const SizedBox(height: 16),
-
-            // Statut actuel
-            _buildCurrentStatus(),
-
-            const SizedBox(height: 24),
-
-            // Articles commandés
-            _buildOrderItems(),
-
-            const SizedBox(height: 24),
-
-            // Historique de suivi
-            _buildTrackingHistory(),
-
-            const SizedBox(height: 24),
-
-            // Informations de livraison
-            _buildDeliveryInfo(),
-
-            const SizedBox(height: 32),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _loadOrder,
+        color: AppColors.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildOrderHeader(),
+              const SizedBox(height: 24),
+              _buildProgressBar(),
+              const SizedBox(height: 16),
+              _buildCurrentStatus(),
+              const SizedBox(height: 24),
+              _buildOrderItems(),
+              const SizedBox(height: 24),
+              if (order!.tracking.isNotEmpty) ...[
+                _buildTrackingHistory(),
+                const SizedBox(height: 24),
+              ],
+              _buildDeliveryInfo(),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
@@ -114,11 +157,15 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
+        gradient: const LinearGradient(
+          colors: [AppColors.primary, AppColors.secondary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: AppColors.primary.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -130,22 +177,26 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Commande #${order.id}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textWhite,
+              Expanded(
+                child: Text(
+                  'Commande #${order!.id}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textWhite,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(order.status),
+                  color: _getStatusColor(order!.status),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _getStatusDisplayName(order.status),
+                  _getStatusDisplayName(order!.status),
                   style: const TextStyle(
                     color: AppColors.textWhite,
                     fontWeight: FontWeight.w600,
@@ -157,10 +208,10 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Commandée le ${_formatDate(order.createdAt)}',
+            'Commandée le ${_formatDate(order!.createdAt)}',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.textWhite.withValues(alpha: 0.8),
+              color: AppColors.textWhite.withOpacity(0.8),
             ),
           ),
           const SizedBox(height: 12),
@@ -173,7 +224,7 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
               ),
               const SizedBox(width: 8),
               Text(
-                '${order.total.toInt()} FCFA',
+                '${order!.total.toInt()} FCFA',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -188,6 +239,10 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
   }
 
   Widget _buildProgressBar() {
+    if (_progressAnimation == null) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -208,21 +263,23 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
           ),
           const SizedBox(height: 20),
           AnimatedBuilder(
-            animation: _progressAnimation,
+            animation: _progressAnimation!,
             builder: (context, child) {
               return Column(
                 children: [
                   LinearProgressIndicator(
-                    value: _progressAnimation.value,
+                    value: _progressAnimation!.value,
                     backgroundColor: AppColors.border,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      _getStatusColor(order.status),
+                      _getStatusColor(order!.status),
                     ),
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${(_progressAnimation.value * 100).toInt()}% terminé',
-                    style: TextStyle(
+                    '${(_progressAnimation!.value * 100).toInt()}% terminé',
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w500,
@@ -241,17 +298,17 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _getStatusColor(order.status).withValues(alpha: 0.1),
+        color: _getStatusColor(order!.status).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _getStatusColor(order.status).withValues(alpha: 0.3),
+          color: _getStatusColor(order!.status).withOpacity(0.3),
         ),
       ),
       child: Row(
         children: [
           Icon(
-            _getStatusIcon(order.status),
-            color: _getStatusColor(order.status),
+            _getStatusIcon(order!.status),
+            color: _getStatusColor(order!.status),
             size: 28,
           ),
           const SizedBox(width: 16),
@@ -260,16 +317,16 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _getStatusDisplayName(order.status),
+                  _getStatusDisplayName(order!.status),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: _getStatusColor(order.status),
+                    color: _getStatusColor(order!.status),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  order.currentStatusDescription,
+                  order!.currentStatusDescription,
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
@@ -304,7 +361,18 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
             ),
           ),
           const SizedBox(height: 16),
-          ...order.items.map((item) => _buildOrderItem(item)),
+          if (order!.items.isEmpty)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text(
+                  'Aucun article',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            )
+          else
+            ...order!.items.map((item) => _buildOrderItem(item)),
         ],
       ),
     );
@@ -317,13 +385,13 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
       ),
       child: Row(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
+            child: Image.network(
               item.productImage,
               width: 60,
               height: 60,
@@ -354,13 +422,14 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  'Artisan: ${item.artisanName}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
+                if (item.artisanName != null)
+                  Text(
+                    'Artisan: ${item.artisanName}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -373,7 +442,7 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
                       ),
                     ),
                     Text(
-                      '${item.totalPrice.toInt()} FCFA',
+                      '${(item.price * item.quantity).toInt()} FCFA',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -410,7 +479,7 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
             ),
           ),
           const SizedBox(height: 16),
-          ...order.tracking.map((tracking) => _buildTrackingItem(tracking)),
+          ...order!.tracking.map((tracking) => _buildTrackingItem(tracking)),
         ],
       ),
     );
@@ -418,7 +487,7 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
 
   Widget _buildTrackingItem(OrderTracking tracking) {
     final isCompleted = tracking.timestamp.isBefore(DateTime.now());
-    final isLast = tracking == order.tracking.last;
+    final isLast = tracking == order!.tracking.last;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,15 +498,19 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
               width: 20,
               height: 20,
               decoration: BoxDecoration(
-                color: isCompleted ? _getStatusColor(tracking.status) : AppColors.border,
+                color: isCompleted
+                    ? _getStatusColor(tracking.status)
+                    : AppColors.border,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isCompleted ? _getStatusColor(tracking.status) : AppColors.border,
+                  color: isCompleted
+                      ? _getStatusColor(tracking.status)
+                      : AppColors.border,
                   width: 2,
                 ),
               ),
               child: isCompleted
-                  ? Icon(
+                  ? const Icon(
                       Icons.check,
                       size: 12,
                       color: AppColors.textWhite,
@@ -448,7 +521,9 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
               Container(
                 width: 2,
                 height: 40,
-                color: isCompleted ? _getStatusColor(tracking.status) : AppColors.border,
+                color: isCompleted
+                    ? _getStatusColor(tracking.status)
+                    : AppColors.border,
               ),
           ],
         ),
@@ -459,12 +534,12 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isCompleted
-                  ? _getStatusColor(tracking.status).withValues(alpha: 0.1)
+                  ? _getStatusColor(tracking.status).withOpacity(0.1)
                   : AppColors.background,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: isCompleted
-                    ? _getStatusColor(tracking.status).withValues(alpha: 0.3)
+                    ? _getStatusColor(tracking.status).withOpacity(0.3)
                     : AppColors.border,
               ),
             ),
@@ -476,13 +551,15 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: isCompleted ? _getStatusColor(tracking.status) : AppColors.textSecondary,
+                    color: isCompleted
+                        ? _getStatusColor(tracking.status)
+                        : AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   tracking.message,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
                     height: 1.3,
@@ -524,13 +601,13 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
             ),
           ),
           const SizedBox(height: 16),
-          _buildInfoRow('Adresse', order.deliveryAddress),
-          _buildInfoRow('Téléphone', order.deliveryPhone ?? 'N/A'),
-          if (order.trackingNumber != null)
-            _buildInfoRow('N° de suivi', order.trackingNumber!),
-          _buildInfoRow('Paiement', order.paymentMethod),
-          if (order.transactionId != null)
-            _buildInfoRow('Transaction', order.transactionId!),
+          _buildInfoRow('Adresse', order!.deliveryAddress),
+          _buildInfoRow('Téléphone', order!.deliveryPhone ?? 'N/A'),
+          if (order!.trackingNumber != null)
+            _buildInfoRow('N° de suivi', order!.trackingNumber!),
+          _buildInfoRow('Paiement', order!.paymentMethod),
+          if (order!.transactionId != null)
+            _buildInfoRow('Transaction', order!.transactionId!),
         ],
       ),
     );
@@ -573,7 +650,7 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
       case OrderStatus.pending:
         return AppColors.warning;
       case OrderStatus.confirmed:
-        return AppColors.info ?? AppColors.primary;
+        return AppColors.info;
       case OrderStatus.preparing:
         return AppColors.accent;
       case OrderStatus.readyForPickup:
@@ -600,7 +677,7 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
       case OrderStatus.inTransit:
         return Icons.local_shipping;
       case OrderStatus.delivered:
-        return Icons.check_circle;
+        return Icons.done_all;
       case OrderStatus.cancelled:
         return Icons.cancel;
     }
@@ -631,7 +708,8 @@ class _DeliveryTrackingScreenState extends State<DeliveryTrackingScreen>
 
   String _formatDateTime(DateTime dateTime) {
     final date = _formatDate(dateTime);
-    final time = '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    final time =
+        '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     return '$date à $time';
   }
 }

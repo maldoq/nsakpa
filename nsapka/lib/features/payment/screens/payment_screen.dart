@@ -8,11 +8,7 @@ class PaymentScreen extends StatefulWidget {
   final double amount;
   final String orderId;
 
-  const PaymentScreen({
-    super.key,
-    required this.amount,
-    required this.orderId,
-  });
+  const PaymentScreen({super.key, required this.amount, required this.orderId});
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -36,13 +32,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
       final methods = await ApiService.getPaymentMethods();
       if (methods.isNotEmpty) {
         setState(() {
-          paymentMethods = methods.map((m) => PaymentMethod(
-            id: m['code'] ?? m['id'] ?? '',
-            name: m['name'] ?? '',
-            icon: m['icon'] ?? '💳',
-            description: m['description'] ?? '',
-            color: _getColorForMethod(m['code'] ?? ''),
-          )).toList();
+          paymentMethods = methods
+              .map(
+                (m) => PaymentMethod(
+                  id: m['code'] ?? m['id'] ?? '',
+                  name: m['name'] ?? '',
+                  icon: m['icon'] ?? '💳',
+                  description: m['description'] ?? '',
+                  color: _getColorForMethod(m['code'] ?? ''),
+                ),
+              )
+              .toList();
           if (paymentMethods.isNotEmpty) {
             selectedMethod = paymentMethods.first.id;
           }
@@ -126,16 +126,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
           children: [
             // Montant
             _buildAmountCard(),
-            
+
             // Sécurité Escrow
             _buildEscrowInfo(),
-            
+
             // Méthodes de paiement
             _buildPaymentMethods(),
-            
+
             // Formulaire
             _buildPaymentForm(),
-            
+
             const SizedBox(height: 100),
           ],
         ),
@@ -286,7 +286,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildEscrowStep(String number, String title, String description, IconData icon, {bool isLast = false}) {
+  Widget _buildEscrowStep(
+    String number,
+    String title,
+    String description,
+    IconData icon, {
+    bool isLast = false,
+  }) {
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
       child: Row(
@@ -365,7 +371,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
   Widget _buildPaymentMethodCard(PaymentMethod method) {
     final isSelected = selectedMethod == method.id;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -376,7 +382,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? method.color.withValues(alpha: 0.1) : AppColors.surface,
+          color: isSelected
+              ? method.color.withValues(alpha: 0.1)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? method.color : AppColors.border,
@@ -393,10 +401,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: Text(
-                  method.icon,
-                  style: const TextStyle(fontSize: 24),
-                ),
+                child: Text(method.icon, style: const TextStyle(fontSize: 24)),
               ),
             ),
             const SizedBox(width: 16),
@@ -424,11 +429,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
               ),
             ),
             if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: method.color,
-                size: 28,
-              ),
+              Icon(Icons.check_circle, color: method.color, size: 28),
           ],
         ),
       ),
@@ -479,11 +480,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.info_outline, size: 20, color: AppColors.primary),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
@@ -571,46 +568,43 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
 
     try {
-      // Initier le paiement via l'API
-      final paymentData = await ApiService.initiatePayment(
+      // 🔥 ICI on appelle ton vrai backend
+      final result = await RemoteApiService.payOrder(
         orderId: widget.orderId,
-        paymentMethodCode: selectedMethod,
+        paymentMethod: selectedMethod,
         phoneNumber: phoneController.text.trim(),
       );
 
-      if (paymentData != null && mounted) {
-        final paymentId = paymentData['id'];
-        
-        // Confirmer le paiement (simulation - en production, attendre l'OTP)
-        final confirmedPayment = await ApiService.confirmPayment(
-          paymentId: paymentId,
-          otp: '123456', // OTP de test - en production, demander à l'utilisateur
+      if (!mounted) return;
+
+      setState(() {
+        isProcessing = false;
+      });
+
+      if (result != null && result['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Paiement effectué avec succès')),
         );
 
-        if (confirmedPayment != null && mounted) {
-          setState(() {
-            isProcessing = false;
-          });
-          _showSuccessDialog();
-        } else {
-          throw Exception('Erreur lors de la confirmation du paiement');
-        }
+        _showSuccessDialog(); // ➜ popup + redirection
       } else {
-        throw Exception('Erreur lors de l\'initiation du paiement');
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          isProcessing = false;
-        });
-        
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Échec du paiement'),
             backgroundColor: AppColors.error,
           ),
         );
       }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isProcessing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
+      );
     }
   }
 
@@ -619,9 +613,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -651,10 +643,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             const Text(
               'Votre commande a été confirmée.\nL\'artisan va préparer votre commande.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -666,9 +655,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DeliveryTrackingScreen(
-                      orderId: widget.orderId,
-                    ),
+                    builder: (context) =>
+                        DeliveryTrackingScreen(orderId: widget.orderId),
                   ),
                 );
               },

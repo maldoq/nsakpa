@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nsapka/core/models/product_model.dart';
 import 'package:nsapka/core/services/api_service.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/data/mock_data.dart';
@@ -708,119 +709,156 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
   }
 
   Widget _buildNewArrivals() {
-    final products = MockData.productsData.take(4).toList();
-
     return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+      child: FutureBuilder<List<ProductModel>>(
+        future: ApiService.getProducts(), // 🔥 backend réel
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Padding(
+              padding: EdgeInsets.all(40),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text('Erreur: ${snapshot.error}'),
+            );
+          }
+
+          final allProducts = snapshot.data ?? [];
+
+          if (allProducts.isEmpty) {
+            return const Padding(
+              padding: EdgeInsets.all(24),
+              child: Text('Aucun produit disponible'),
+            );
+          }
+
+          // ✅ MAX 4 PRODUITS
+          final products = allProducts.take(4).toList();
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ---- HEADER ----
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 4,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: AppColors.accent,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 4,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          '🆕 Nouveautés',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      '🆕 Nouveautés',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _currentIndex = 1;
+                        });
+                      },
+                      child: const Text('Voir tout →'),
                     ),
                   ],
                 ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _currentIndex = 1;
-                    });
-                  },
-                  child: const Text('Voir tout →'),
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.7,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-            ),
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              return EnhancedProductCard(
-                product: products[index],
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductDetailScreen(
-                        product: products[index],
-                        isVisitorMode: widget.isVisitorMode,
-                      ),
-                    ),
+              // ---- GRID ----
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
+
+                  return EnhancedProductCard(
+                    product: product,
+
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailScreen(
+                            product: product,
+                            isVisitorMode: widget.isVisitorMode,
+                          ),
+                        ),
+                      );
+                    },
+
+                    onFavoriteToggle: () {
+                      FavoritesManager.toggleFavorite(product.id);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            FavoritesManager.isFavorite(product.id)
+                                ? 'Ajouté aux favoris'
+                                : 'Retiré des favoris',
+                          ),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+
+                    onAddToCart: () {
+                      if (widget.isVisitorMode) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Connectez-vous pour ajouter au panier',
+                            ),
+                          ),
+                        );
+                      } else {
+                        CartManager.addToCart(product, 1);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${product.name} ajouté au panier'),
+                            action: SnackBarAction(
+                              label: 'Voir panier',
+                              onPressed: () {
+                                setState(() {
+                                  _currentIndex = 3;
+                                });
+                              },
+                            ),
+                          ),
+                        );
+                      }
+                    },
+
+                    isVisitorMode: widget.isVisitorMode,
                   );
                 },
-                onFavoriteToggle: () {
-                  FavoritesManager.toggleFavorite(products[index].id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        FavoritesManager.isFavorite(products[index].id)
-                            ? 'Ajouté aux favoris'
-                            : 'Retiré des favoris',
-                      ),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
-                },
-                onAddToCart: () {
-                  if (widget.isVisitorMode) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Connectez-vous pour ajouter au panier'),
-                      ),
-                    );
-                  } else {
-                    CartManager.addToCart(products[index], 1);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${products[index].name} ajouté au panier',
-                        ),
-                        action: SnackBarAction(
-                          label: 'Voir panier',
-                          onPressed: () {
-                            setState(() {
-                              _currentIndex = 3;
-                            });
-                          },
-                        ),
-                      ),
-                    );
-                  }
-                },
-                isVisitorMode: widget.isVisitorMode,
-              );
-            },
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

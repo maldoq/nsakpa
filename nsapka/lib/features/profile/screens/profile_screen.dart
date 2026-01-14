@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nsapka/core/models/order_model.dart';
 import 'package:nsapka/core/utils/order_utils.dart';
+import 'package:nsapka/features/orders/screens/order_tracking_screen.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/services/auth_service.dart';
@@ -43,7 +44,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadRecentOrders() async {
     setState(() => _isLoadingOrders = true);
     try {
-      final orders = await RemoteApiService.getMyOrders(limit: 3);
+      final orders = await ApiService.getMyOrders();
+      debugPrint('DEBUG: Orders raw response: $orders');
       if (mounted) {
         setState(() {
           _recentOrders = orders;
@@ -611,90 +613,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildOrderRow(OrderModel order) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          // Icône de commande
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: getOrderStatusColor(order.status).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              Icons.receipt_long,
-              color: getOrderStatusColor(order.status),
-              size: 22,
-            ),
+    return GestureDetector(
+      onTap: () {
+        // ✅ Navigation vers l'écran de tracking
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OrderTrackingScreen(order: order),
           ),
-          const SizedBox(width: 14),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            // Icône de commande
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: getOrderStatusColor(order.status).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                Icons.receipt_long,
+                color: getOrderStatusColor(order.status),
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
 
-          // Informations de la commande
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Informations de la commande
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Commande #${order.id}',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        formatOrderDate(order.createdAt),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const Text(' • ', style: TextStyle(color: Colors.grey)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: getOrderStatusColor(
+                            order.status,
+                          ).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          getOrderStatusLabel(order.status),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: getOrderStatusColor(order.status),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Montant total
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Commande #${order.id}',
+                  '${order.total.toStringAsFixed(0)} FCFA',
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      formatOrderDate(order.createdAt),
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const Text(' • ', style: TextStyle(color: Colors.grey)),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: getOrderStatusColor(
-                          order.status,
-                        ).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        getOrderStatusLabel(order.status),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: getOrderStatusColor(order.status),
-                        ),
-                      ),
-                    ),
-                  ],
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey.shade400,
                 ),
               ],
             ),
-          ),
-
-          // Montant total
-          Text(
-            '${order.total.toStringAsFixed(0)} FCFA',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

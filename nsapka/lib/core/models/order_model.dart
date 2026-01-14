@@ -62,29 +62,32 @@ class OrderModel {
 
   // Ajoutez cette méthode dans votre OrderModel existant
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
     return OrderModel(
       id: json['id'].toString(),
       buyerId:
           json['buyer_id']?.toString() ??
           json['buyer']?['id']?.toString() ??
           '',
-      buyerName: json['buyer_name'] ?? json['buyer']?['name'] ?? '',
-      artisanId:
-          json['artisan_id']?.toString() ??
-          json['artisan']?['id']?.toString() ??
-          '',
-      artisanName: json['artisan_name'] ?? json['artisan']?['name'] ?? '',
+      buyerName: json['buyer_name'] ?? json['buyer']?['first_name'] ?? '',
+      artisanId: json['artisan_id']?.toString() ?? '',
+      artisanName: json['artisan_name'] ?? '',
       items:
           (json['items'] as List<dynamic>?)
               ?.map((item) => OrderItem.fromJson(item))
               .toList() ??
           [],
-      subtotal: (json['subtotal'] ?? 0).toDouble(),
-      deliveryFee: (json['delivery_fee'] ?? 0).toDouble(),
-      total: (json['total'] ?? json['total_amount'] ?? 0).toDouble(),
+      subtotal: parseDouble(json['subtotal'] ?? 0),
+      deliveryFee: parseDouble(json['delivery_fee'] ?? 0),
+      total: parseDouble(json['total_amount'] ?? 0),
       status: _parseOrderStatus(json['status']),
       paymentStatus: _parsePaymentStatus(json['payment_status'] ?? 'pending'),
-      paymentMethod: json['payment_method'] ?? 'Mobile Money',
+      paymentMethod: json['payment_method'] ?? 'orange_money',
       transactionId: json['transaction_id'],
       createdAt: DateTime.parse(json['created_at']),
       confirmedAt: json['confirmed_at'] != null
@@ -235,6 +238,12 @@ class OrderItem {
 
   // Ajoutez dans OrderItem
   factory OrderItem.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
     return OrderItem(
       productId:
           json['product_id']?.toString() ??
@@ -243,7 +252,7 @@ class OrderItem {
       productName: json['product_name'] ?? json['product']?['name'] ?? '',
       productImage: json['product_image'] ?? json['product']?['image'] ?? '',
       quantity: json['quantity'] ?? 1,
-      price: (json['price'] ?? json['unit_price'] ?? 0).toDouble(),
+      price: parseDouble(json['price'] ?? json['unit_price'] ?? 0),
       artisanId: json['artisan_id']?.toString(),
       artisanName: json['artisan_name'],
     );

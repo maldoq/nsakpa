@@ -520,7 +520,6 @@ class _CartScreenState extends State<CartScreen>
 
   Future<void> _proceedToPayment(double total) async {
     try {
-      // Créer la commande d'abord
       final cartItems = CartManager.cartItems;
 
       if (cartItems.isEmpty) {
@@ -533,24 +532,23 @@ class _CartScreenState extends State<CartScreen>
         return;
       }
 
-      // Afficher un indicateur de chargement
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Créer la commande via l'API
-      // Note: Le backend crée automatiquement la commande depuis le panier
-      // On doit juste fournir l'adresse de livraison
       final order = await ApiService.createOrder(
         deliveryAddress: 'Adresse à définir',
         deliveryPhone: '0000000000',
-        cartItems: cartItems, // ta liste de CartItemModel
+        cartItems: cartItems,
       );
 
       if (order != null && mounted) {
         Navigator.pop(context); // Fermer le loading
+
+        // ✅ Vider le panier après commande réussie
+        CartManager.clearCart();
 
         // Aller à l'écran de paiement
         Navigator.push(
@@ -558,7 +556,7 @@ class _CartScreenState extends State<CartScreen>
           MaterialPageRoute(
             builder: (context) => PaymentScreen(
               amount: total,
-              orderId: order['id'] ?? order['id'].toString(),
+              orderId: order['id']?.toString() ?? '',
             ),
           ),
         );

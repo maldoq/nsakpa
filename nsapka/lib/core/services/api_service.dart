@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nsapka/core/models/cart_item_model.dart';
 import 'package:nsapka/core/models/order_model.dart';
+import 'package:nsapka/core/models/product_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../models/user_model.dart';
@@ -86,6 +87,30 @@ class ApiService {
     required String password,
   }) async {
     return RemoteApiService.login(phone: phone, password: password);
+  }
+
+  static Future<List<ProductModel>> getProducts({
+    String? category,
+    String? search,
+  }) async {
+    try {
+      final data = await RemoteApiService.getArtisanProducts(
+        category: category,
+        search: search,
+      );
+
+      // 🔍 DEBUG : Afficher la réponse brute
+      debugPrint('📦 Produits reçus: ${data.length}');
+      if (data.isNotEmpty) {
+        debugPrint('📦 Premier produit: ${data.first}');
+      }
+
+      return data.map((e) => ProductModel.fromJson(e)).toList();
+    } catch (e, stackTrace) {
+      debugPrint('❌ Erreur getProducts: $e');
+      debugPrint('📍 Stack: $stackTrace');
+      return [];
+    }
   }
 
   static Future<List<Map<String, dynamic>>> getArtisanProducts({
@@ -246,6 +271,10 @@ class ApiService {
     ];
   }
 
+  static Future<List<OrderModel>> getMyOrders({int? limit}) async {
+    return RemoteApiService.getMyOrders(limit: limit);
+  }
+
   static Future<Map<String, dynamic>?> initiatePayment({
     required String orderId,
     required String paymentMethodCode,
@@ -325,12 +354,31 @@ class RemoteApiService {
     return 'http://127.0.0.1:8000/api';
   }
 
+  // ===== HEADERS =====
+
+  /// Headers pour les endpoints publics (sans authentification)
+  static Map<String, String> getPublicHeaders() {
+    return {'Content-Type': 'application/json', 'Accept': 'application/json'};
+  }
+
+  /// Headers pour les endpoints protégés (avec authentification)
+  static Map<String, String> getAuthHeaders(String token) {
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  /// Headers génériques (avec token optionnel) - LEGACY
   static Map<String, String> getHeaders({String? token}) {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    if (token != null) headers['Authorization'] = 'Bearer $token';
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
     return headers;
   }
 
@@ -491,30 +539,82 @@ class RemoteApiService {
     }
   }
 
+  static Future<Map<String, dynamic>?> payOrder({
+    required String orderId,
+    required String paymentMethod,
+    required String phoneNumber,
+  }) async {
+    try {
+      final token = await AuthService.getToken();
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/pay/'),
+        headers: getHeaders(token: token),
+        body: json.encode({
+          'order_id': orderId,
+          'payment_method': paymentMethod,
+          'phone_number': phoneNumber,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+
+      debugPrint('Erreur paiement: ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('Erreur réseau paiement: $e');
+      return null;
+    }
+  }
+
   // --- Produits Réels ---
   static Future<List<Map<String, dynamic>>> getArtisanProducts({
     String? category,
     String? search,
   }) async {
     try {
-      String url =
-          '$baseUrl/artisan/products?'; // Assurez-vous que l'endpoint existe ou utilisez /products/
-      // Fallback si l'endpoint artisan spécifique n'existe pas encore
-      // url = '$baseUrl/products/';
+      String url = '$baseUrl/products/';
 
-      if (category != null) url += '&category=$category';
-      if (search != null) url += '&search=$search';
+      List<String> params = [];
+      if (category != null) params.add('category=$category');
+      if (search != null) params.add('search=$search');
+
+      if (params.isNotEmpty) {
+        url += '?${params.join('&')}';
+      }
+
+      debugPrint('🌐 URL appelée: $url');
 
       final response = await http.get(
         Uri.parse(url),
-        headers: getHeaders(token: await AuthService.getToken()),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }, // ✅ Headers sans token
       );
 
+      debugPrint('📊 Status: ${response.statusCode}');
+      debugPrint('📄 Body: ${response.body}');
+
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(json.decode(response.body));
+        final decoded = json.decode(response.body);
+
+        // 🔥 Vérifier si c'est une liste
+        if (decoded is! List) {
+          debugPrint('⚠️ Réponse n\'est pas une liste: $decoded');
+          return [];
+        }
+
+        return List<Map<String, dynamic>>.from(decoded);
       }
+
+      debugPrint('❌ Erreur HTTP: ${response.statusCode}');
       return [];
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('💥 Erreur getArtisanProducts: $e');
+      debugPrint('📍 Stack: $stackTrace');
       return [];
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/order_model.dart';
+import '../../../core/services/api_service.dart';
 import 'order_tracking_screen.dart';
 import '../../payment/screens/payment_screen.dart';
 
@@ -11,64 +12,34 @@ class OrdersListScreen extends StatefulWidget {
   State<OrdersListScreen> createState() => _OrdersListScreenState();
 }
 
-class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerProviderStateMixin {
+class _OrdersListScreenState extends State<OrdersListScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
-  final List<OrderModel> orders = [
-    OrderModel(
-      id: 'CMD1234567',
-      buyerId: 'buy1',
-      buyerName: 'Jean Kouassi',
-      artisanId: 'art1',
-      artisanName: 'Essi Reine',
-      items: [],
-      subtotal: 25000,
-      deliveryFee: 2000,
-      total: 27000,
-      status: OrderStatus.inTransit,
-      paymentStatus: PaymentStatus.inEscrow,
-      paymentMethod: 'Orange Money',
-      deliveryAddress: 'Cocody, Abidjan',
-      createdAt: DateTime.now().subtract(const Duration(hours: 3)),
-    ),
-    OrderModel(
-      id: 'CMD1234566',
-      buyerId: 'buy1',
-      buyerName: 'Jean Kouassi',
-      artisanId: 'art2',
-      artisanName: 'Dje David',
-      items: [],
-      subtotal: 12000,
-      deliveryFee: 2000,
-      total: 14000,
-      status: OrderStatus.delivered,
-      paymentStatus: PaymentStatus.released,
-      paymentMethod: 'MTN Mobile Money',
-      deliveryAddress: 'Yopougon, Abidjan',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    OrderModel(
-      id: 'CMD1234565',
-      buyerId: 'buy1',
-      buyerName: 'Jean Kouassi',
-      artisanId: 'art3',
-      artisanName: 'Ousmane Seyni',
-      items: [],
-      subtotal: 45000,
-      deliveryFee: 2000,
-      total: 47000,
-      status: OrderStatus.preparing,
-      paymentStatus: PaymentStatus.inEscrow,
-      paymentMethod: 'Wave',
-      deliveryAddress: 'Plateau, Abidjan',
-      createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-    ),
-  ];
+
+  List<OrderModel> orders = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadOrders();
+  }
+
+  Future<void> _loadOrders() async {
+    setState(() => isLoading = true);
+    try {
+      final loadedOrders = await ApiService.getMyOrders();
+      if (mounted) {
+        setState(() {
+          orders = loadedOrders;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Erreur chargement commandes: $e');
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -94,7 +65,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
           controller: _tabController,
           indicatorColor: AppColors.accent,
           labelColor: AppColors.textWhite,
-          unselectedLabelColor: AppColors.textWhite.withValues(alpha: 0.6),
+          unselectedLabelColor: AppColors.textWhite.withOpacity(0.6),
           tabs: const [
             Tab(text: 'Toutes'),
             Tab(text: 'En cours'),
@@ -103,15 +74,35 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildOrdersList(orders),
-          _buildOrdersList(orders.where((o) => o.status != OrderStatus.delivered && o.status != OrderStatus.cancelled).toList()),
-          _buildOrdersList(orders.where((o) => o.status == OrderStatus.delivered).toList()),
-          _buildOrdersList([]),
-        ],
-      ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOrdersList(orders),
+                _buildOrdersList(
+                  orders
+                      .where(
+                        (o) =>
+                            o.status != OrderStatus.delivered &&
+                            o.status != OrderStatus.cancelled,
+                      )
+                      .toList(),
+                ),
+                _buildOrdersList(
+                  orders
+                      .where((o) => o.status == OrderStatus.delivered)
+                      .toList(),
+                ),
+                _buildOrdersList(
+                  orders
+                      .where((o) => o.status == OrderStatus.cancelled)
+                      .toList(),
+                ),
+              ],
+            ),
     );
   }
 
@@ -129,10 +120,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
             const SizedBox(height: 16),
             const Text(
               'Aucune commande',
-              style: TextStyle(
-                fontSize: 18,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -231,7 +219,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
                 ],
               ),
             ),
-            
+
             // Contenu
             Padding(
               padding: const EdgeInsets.all(16),
@@ -255,7 +243,10 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
@@ -282,11 +273,11 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 12),
                   const Divider(height: 1),
                   const SizedBox(height: 12),
-                  
+
                   // Adresse
                   Row(
                     children: [
@@ -307,9 +298,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   // Total
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -331,9 +322,9 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
                       ),
                     ],
                   ),
-                  
+
                   // Bouton Payer si le paiement n'est pas effectué
-                  if (order.paymentStatus == PaymentStatus.pending || 
+                  if (order.paymentStatus == PaymentStatus.pending ||
                       order.paymentStatus == PaymentStatus.inEscrow)
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
@@ -433,7 +424,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> with SingleTickerPr
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    
+
     if (diff.inHours < 1) {
       return 'Il y a ${diff.inMinutes} min';
     } else if (diff.inHours < 24) {

@@ -18,7 +18,7 @@ class ProductModel {
   final List<String> tags;
   final DateTime createdAt;
   final bool isFavorite;
-  
+
   ProductModel({
     required this.id,
     required this.name,
@@ -40,31 +40,86 @@ class ProductModel {
     required this.createdAt,
     this.isFavorite = false,
   });
-  
+
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    double parseDouble(dynamic value) {
+      if (value == null) return 0.0;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value) ?? 0.0;
+      return 0.0;
+    }
+
+    // 🔥 PARSER LES IMAGES - Gérer les deux formats
+    List<String> parseImages(dynamic imagesData) {
+      if (imagesData == null) return [];
+
+      // Format 1 : Liste simple de strings (URLs)
+      if (imagesData is List) {
+        try {
+          return List<String>.from(imagesData);
+        } catch (e) {
+          // Format 2 : Liste d'objets {id, image, is_main}
+          return imagesData
+              .map((img) => img['image']?.toString() ?? '')
+              .where((url) => url.isNotEmpty)
+              .toList()
+              .cast<String>();
+        }
+      }
+
+      return [];
+    }
+
     return ProductModel(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      price: json['price'].toDouble(),
-      stock: json['stock'],
-      category: json['category'],
-      images: List<String>.from(json['images']),
-      videoUrl: json['videoUrl'],
-      artisanId: json['artisanId'],
-      artisanName: json['artisanName'],
-      artisanStand: json['artisanStand'],
-      rating: json['rating']?.toDouble() ?? 0.0,
-      reviewCount: json['reviewCount'] ?? 0,
-      isLimitedEdition: json['isLimitedEdition'] ?? false,
-      limitedQuantity: json['limitedQuantity'],
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+      price: parseDouble(json['price']),
+      stock: json['stock'] ?? 0,
+      category: json['category'] ?? '',
+
+      // 🔥 Utiliser la fonction de parsing
+      images: parseImages(json['images'] ?? json['images_details']),
+
+      videoUrl: json['videoUrl'] ?? json['video_url'],
+
+      // 🔥 Gérer les données artisan (deux formats possibles)
+      artisanId:
+          json['artisanId']?.toString() ??
+          json['artisan_details']?['id']?.toString() ??
+          json['artisan']?.toString() ??
+          '',
+
+      artisanName:
+          json['artisanName'] ??
+          json['artisan_details']?['name'] ??
+          json['artisan_details']?['first_name'] ??
+          '',
+
+      artisanStand:
+          json['artisanStand'] ?? json['artisan_details']?['stand_name'],
+
+      rating: parseDouble(json['rating'] ?? json['average_rating']),
+      reviewCount: json['reviewCount'] ?? json['review_count'] ?? 0,
+
+      isLimitedEdition:
+          json['isLimitedEdition'] ?? json['is_limited_edition'] ?? false,
+
+      limitedQuantity: json['limitedQuantity'] ?? json['limited_quantity'],
       origin: json['origin'],
+
       tags: json['tags'] != null ? List<String>.from(json['tags']) : [],
-      createdAt: DateTime.parse(json['createdAt']),
+
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+
       isFavorite: json['isFavorite'] ?? false,
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -88,11 +143,8 @@ class ProductModel {
       'isFavorite': isFavorite,
     };
   }
-  
-  ProductModel copyWith({
-    bool? isFavorite,
-    int? stock,
-  }) {
+
+  ProductModel copyWith({bool? isFavorite, int? stock}) {
     return ProductModel(
       id: id,
       name: name,
