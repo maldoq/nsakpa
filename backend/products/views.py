@@ -32,5 +32,16 @@ class ProductViewSet(viewsets.ModelViewSet):
     def my_products(self, request):
         # /api/products/my_products/
         products = Product.objects.filter(artisan=request.user)
+        
+        # Appliquer les filtres
+        category = request.query_params.get('category')
+        search = request.query_params.get('search')
+        
+        if category:
+            products = products.filter(category__iexact=category)
+        if search:
+            products = products.filter(name__icontains=search)
+            
+        products = products.order_by('-created_at')
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)

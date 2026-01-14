@@ -497,24 +497,61 @@ class RemoteApiService {
     String? search,
   }) async {
     try {
-      String url =
-          '$baseUrl/artisan/products?'; // Assurez-vous que l'endpoint existe ou utilisez /products/
-      // Fallback si l'endpoint artisan spécifique n'existe pas encore
-      // url = '$baseUrl/products/';
+      // Utiliser l'endpoint correct du backend Django
+      String url = '$baseUrl/products/my_products/';
 
-      if (category != null) url += '&category=$category';
-      if (search != null) url += '&search=$search';
+      // Ajouter les paramètres de filtrage
+      List<String> params = [];
+      if (category != null) params.add('category=$category');
+      if (search != null) params.add('search=$search');
+
+      if (params.isNotEmpty) {
+        url += '?${params.join('&')}';
+      }
+
+      final token = await AuthService.getToken();
+      debugPrint('🔍 Chargement produits artisan: $url');
 
       final response = await http.get(
         Uri.parse(url),
-        headers: getHeaders(token: await AuthService.getToken()),
+        headers: getHeaders(token: token),
       );
 
+      debugPrint('📦 Réponse produits: ${response.statusCode}');
+
       if (response.statusCode == 200) {
-        return List<Map<String, dynamic>>.from(json.decode(response.body));
+        final List<dynamic> data = json.decode(response.body);
+        // Transformer les données pour correspondre au format attendu
+        return data.map((product) {
+          // Extraire les URLs des images depuis images_details
+          List<String> imageUrls = [];
+          if (product['images_details'] != null) {
+            imageUrls = (product['images_details'] as List)
+                .map((img) => img['image']?.toString() ?? '')
+                .where((url) => url.isNotEmpty)
+                .toList();
+          }
+
+          return {
+            'id': product['id']?.toString() ?? '',
+            'name': product['name'] ?? '',
+            'description': product['description'] ?? '',
+            'price': product['price'] is String
+                ? double.tryParse(product['price']) ?? 0.0
+                : (product['price'] ?? 0).toDouble(),
+            'stock': product['stock'] ?? 0,
+            'category': product['category'] ?? '',
+            'is_limited_edition': product['is_limited_edition'] ?? false,
+            'is_approved': true, // Ajuster selon votre logique backend
+            'images': imageUrls,
+          };
+        }).toList();
+      } else {
+        debugPrint('❌ Erreur produits: ${response.body}');
+        return [];
       }
-      return [];
     } catch (e) {
+      debugPrint('❌ Exception getArtisanProducts: $e');
       return [];
     }
   }
