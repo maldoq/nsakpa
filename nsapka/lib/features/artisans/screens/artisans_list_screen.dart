@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nsapka/core/services/api_service.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/data/mock_data.dart';
 import '../../../core/models/user_model.dart';
@@ -16,19 +17,31 @@ class ArtisansListScreen extends StatefulWidget {
   State<ArtisansListScreen> createState() => _ArtisansListScreenState();
 }
 
-class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTickerProviderStateMixin {
+class _ArtisansListScreenState extends State<ArtisansListScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  
+
   String selectedCategory = 'Tous';
-  final List<String> categories = ['Tous', 'Sculpture', 'Peinture', 'Tissage', 'Bijoux', 'Décoration'];
-  
+  final List<String> categories = [
+    'Tous',
+    'Sculpture',
+    'Peinture',
+    'Tissage',
+    'Bijoux',
+    'Décoration',
+  ];
+
   String searchQuery = '';
   get artisanReviews => null;
+
+  late Future<List<UserModel>> _artisansFuture;
 
   @override
   void initState() {
     super.initState();
+    _artisansFuture = RemoteApiService.getArtisans();
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -74,17 +87,50 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
           children: [
             // Statistiques
             _buildStatsHeader(),
-            
+
             // Filtres par catégorie
             _buildCategoryFilters(),
-            
+
             // Liste des artisans
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: filteredArtisans.length,
-                itemBuilder: (context, index) {
-                  return _buildArtisanCard(filteredArtisans[index], index);
+              child: FutureBuilder<List<UserModel>>(
+                future: _artisansFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Erreur: ${snapshot.error}'));
+                  }
+
+                  final artisans = snapshot.data ?? [];
+
+                  if (artisans.isEmpty) {
+                    return const Center(
+                      child: Text('Aucun artisan disponible'),
+                    );
+                  }
+
+                  // 🔎 FILTRAGE LOCAL
+                  final filteredArtisans = artisans.where((artisan) {
+                    if (selectedCategory == 'Tous') return true;
+
+                    return artisan.specialties?.any(
+                          (s) => s.toLowerCase().contains(
+                            selectedCategory.toLowerCase(),
+                          ),
+                        ) ??
+                        false;
+                  }).toList();
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredArtisans.length,
+                    itemBuilder: (context, index) {
+                      return _buildArtisanCard(filteredArtisans[index], index);
+                    },
+                  );
                 },
               ),
             ),
@@ -157,7 +203,7 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = selectedCategory == category;
-          
+
           return Container(
             margin: const EdgeInsets.only(right: 12),
             child: FilterChip(
@@ -331,13 +377,17 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
               const SizedBox(height: 12),
 
               // Spécialités
-              if (artisan.specialties != null && artisan.specialties!.isNotEmpty)
+              if (artisan.specialties != null &&
+                  artisan.specialties!.isNotEmpty)
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
                   children: artisan.specialties!.take(3).map((specialty) {
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
@@ -383,7 +433,10 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.thumb_up, color: AppColors.textWhite),
+                      icon: const Icon(
+                        Icons.thumb_up,
+                        color: AppColors.textWhite,
+                      ),
                       onPressed: () => _showArtisanStats(artisan),
                       tooltip: 'Voir les statistiques',
                     ),
@@ -411,7 +464,10 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.local_shipping, color: AppColors.textWhite),
+                      icon: const Icon(
+                        Icons.local_shipping,
+                        color: AppColors.textWhite,
+                      ),
                       onPressed: () => _showDeliveryTracking(artisan),
                       tooltip: 'Suivi de livraison',
                     ),
@@ -431,11 +487,14 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
     }
 
     return MockData.artisans.where((artisan) {
-      return artisan.specialties?.any((specialty) =>
-          specialty.toLowerCase().contains(selectedCategory.toLowerCase())) ?? false;
+      return artisan.specialties?.any(
+            (specialty) => specialty.toLowerCase().contains(
+              selectedCategory.toLowerCase(),
+            ),
+          ) ??
+          false;
     }).toList();
   }
-
 
   void _showArtisanStats(UserModel artisan) {
     // Get reviews for this artisan's products
@@ -460,10 +519,14 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
     }).toList();
 
     final averageRating = artisanReviews.isNotEmpty
-        ? artisanReviews.fold<double>(0, (sum, review) => sum + review.rating) / artisanReviews.length
+        ? artisanReviews.fold<double>(0, (sum, review) => sum + review.rating) /
+              artisanReviews.length
         : 0.0;
 
-    final totalLikes = artisanReviews.fold<int>(0, (sum, review) => sum + review.helpfulCount);
+    final totalLikes = artisanReviews.fold<int>(
+      0,
+      (sum, review) => sum + review.helpfulCount,
+    );
 
     showModalBottomSheet(
       context: context,
@@ -482,7 +545,9 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Row(
                 children: [
@@ -586,66 +651,75 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
                         ),
                       ),
                       const SizedBox(height: 16),
-                      ...artisanReviews.take(3).map((review) => Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                ...List.generate(5, (index) => Icon(
-                                  index < review.rating ? Icons.star : Icons.star_border,
-                                  size: 16,
-                                  color: AppColors.warning,
-                                )),
-                                const SizedBox(width: 8),
-                                Text(
-                                  _formatDate(review.createdAt),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              review.comment,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textPrimary,
-                                height: 1.4,
+                      ...artisanReviews
+                          .take(3)
+                          .map(
+                            (review) => Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AppColors.border),
                               ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.thumb_up,
-                                  size: 14,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${review.helpfulCount} utiles',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      ...List.generate(
+                                        5,
+                                        (index) => Icon(
+                                          index < review.rating
+                                              ? Icons.star
+                                              : Icons.star_border,
+                                          size: 16,
+                                          color: AppColors.warning,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _formatDate(review.createdAt),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    review.comment,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: AppColors.textPrimary,
+                                      height: 1.4,
+                                    ),
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.thumb_up,
+                                        size: 14,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${review.helpfulCount} utiles',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ],
-                        ),
-                      )),
+                          ),
                     ] else
                       const Center(
                         child: Padding(
@@ -704,9 +778,11 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
 
   void _showDeliveryTracking(UserModel artisan) {
     // Trouver les commandes de l'utilisateur avec cet artisan
-    final userOrders = MockData.orders.where((order) =>
-      order.buyerId == 'buy1' && order.artisanId == artisan.id
-    ).toList();
+    final userOrders = MockData.orders
+        .where(
+          (order) => order.buyerId == 'buy1' && order.artisanId == artisan.id,
+        )
+        .toList();
 
     if (userOrders.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -736,7 +812,9 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: AppColors.primaryGradient,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
               child: Row(
                 children: [
@@ -818,7 +896,8 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DeliveryTrackingScreen(orderId: order.id),
+                            builder: (context) =>
+                                DeliveryTrackingScreen(orderId: order.id),
                           ),
                         );
                       },
@@ -929,15 +1008,19 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
   void _performSearch(String query) {
     final results = MockData.artisans.where((artisan) {
       return artisan.name.toLowerCase().contains(query.toLowerCase()) ||
-             artisan.standName?.toLowerCase().contains(query.toLowerCase()) == true ||
-             artisan.specialties?.any((s) => s.toLowerCase().contains(query.toLowerCase())) == true ||
-             artisan.bio?.toLowerCase().contains(query.toLowerCase()) == true;
+          artisan.standName?.toLowerCase().contains(query.toLowerCase()) ==
+              true ||
+          artisan.specialties?.any(
+                (s) => s.toLowerCase().contains(query.toLowerCase()),
+              ) ==
+              true ||
+          artisan.bio?.toLowerCase().contains(query.toLowerCase()) == true;
     }).toList();
 
     if (results.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Aucun artisan trouvé')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Aucun artisan trouvé')));
       return;
     }
 
@@ -982,10 +1065,8 @@ class _ArtisansListScreenState extends State<ArtisansListScreen> with SingleTick
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ProfileScreen(
-          userId: artisan.id,
-          userRole: UserRole.artisan,
-        ),
+        builder: (context) =>
+            ProfileScreen(userId: artisan.id, userRole: UserRole.artisan),
       ),
     );
   }
