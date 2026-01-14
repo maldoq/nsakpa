@@ -1,18 +1,18 @@
 enum OrderStatus {
-  pending,        // En attente
-  confirmed,      // Confirmée
-  preparing,      // En préparation
+  pending, // En attente
+  confirmed, // Confirmée
+  preparing, // En préparation
   readyForPickup, // Prête pour enlèvement
-  inTransit,      // En transit
-  delivered,      // Livrée
-  cancelled,      // Annulée
+  inTransit, // En transit
+  delivered, // Livrée
+  cancelled, // Annulée
 }
 
 enum PaymentStatus {
-  pending,    // En attente
-  inEscrow,   // En séquestre
-  released,   // Libéré
-  refunded,   // Remboursé
+  pending, // En attente
+  inEscrow, // En séquestre
+  released, // Libéré
+  refunded, // Remboursé
 }
 
 class OrderModel {
@@ -59,6 +59,89 @@ class OrderModel {
     this.trackingNumber,
     this.tracking = const [],
   });
+
+  // Ajoutez cette méthode dans votre OrderModel existant
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      id: json['id'].toString(),
+      buyerId:
+          json['buyer_id']?.toString() ??
+          json['buyer']?['id']?.toString() ??
+          '',
+      buyerName: json['buyer_name'] ?? json['buyer']?['name'] ?? '',
+      artisanId:
+          json['artisan_id']?.toString() ??
+          json['artisan']?['id']?.toString() ??
+          '',
+      artisanName: json['artisan_name'] ?? json['artisan']?['name'] ?? '',
+      items:
+          (json['items'] as List<dynamic>?)
+              ?.map((item) => OrderItem.fromJson(item))
+              .toList() ??
+          [],
+      subtotal: (json['subtotal'] ?? 0).toDouble(),
+      deliveryFee: (json['delivery_fee'] ?? 0).toDouble(),
+      total: (json['total'] ?? json['total_amount'] ?? 0).toDouble(),
+      status: _parseOrderStatus(json['status']),
+      paymentStatus: _parsePaymentStatus(json['payment_status'] ?? 'pending'),
+      paymentMethod: json['payment_method'] ?? 'Mobile Money',
+      transactionId: json['transaction_id'],
+      createdAt: DateTime.parse(json['created_at']),
+      confirmedAt: json['confirmed_at'] != null
+          ? DateTime.parse(json['confirmed_at'])
+          : null,
+      deliveredAt: json['delivered_at'] != null
+          ? DateTime.parse(json['delivered_at'])
+          : null,
+      deliveryAddress: json['delivery_address'] ?? '',
+      deliveryPhone: json['delivery_phone'],
+      trackingNumber: json['tracking_number'],
+      tracking:
+          (json['tracking'] as List<dynamic>?)
+              ?.map((t) => OrderTracking.fromJson(t))
+              .toList() ??
+          [],
+    );
+  }
+
+  static OrderStatus _parseOrderStatus(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'pending':
+        return OrderStatus.pending;
+      case 'confirmed':
+      case 'paid':
+        return OrderStatus.confirmed;
+      case 'preparing':
+        return OrderStatus.preparing;
+      case 'ready_for_pickup':
+      case 'readyforpickup':
+        return OrderStatus.readyForPickup;
+      case 'in_transit':
+      case 'intransit':
+      case 'delivering':
+        return OrderStatus.inTransit;
+      case 'delivered':
+        return OrderStatus.delivered;
+      case 'cancelled':
+        return OrderStatus.cancelled;
+      default:
+        return OrderStatus.pending;
+    }
+  }
+
+  static PaymentStatus _parsePaymentStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'in_escrow':
+      case 'inescrow':
+        return PaymentStatus.inEscrow;
+      case 'released':
+        return PaymentStatus.released;
+      case 'refunded':
+        return PaymentStatus.refunded;
+      default:
+        return PaymentStatus.pending;
+    }
+  }
 
   String get statusText {
     switch (status) {
@@ -150,6 +233,22 @@ class OrderItem {
     this.artisanName,
   });
 
+  // Ajoutez dans OrderItem
+  factory OrderItem.fromJson(Map<String, dynamic> json) {
+    return OrderItem(
+      productId:
+          json['product_id']?.toString() ??
+          json['product']?['id']?.toString() ??
+          '',
+      productName: json['product_name'] ?? json['product']?['name'] ?? '',
+      productImage: json['product_image'] ?? json['product']?['image'] ?? '',
+      quantity: json['quantity'] ?? 1,
+      price: (json['price'] ?? json['unit_price'] ?? 0).toDouble(),
+      artisanId: json['artisan_id']?.toString(),
+      artisanName: json['artisan_name'],
+    );
+  }
+
   double get totalPrice => quantity * price;
 
   get total => null;
@@ -167,4 +266,14 @@ class OrderTracking {
     required this.timestamp,
     this.location,
   });
+
+  // Ajoutez dans OrderTracking
+  factory OrderTracking.fromJson(Map<String, dynamic> json) {
+    return OrderTracking(
+      status: OrderModel._parseOrderStatus(json['status']),
+      message: json['message'] ?? '',
+      timestamp: DateTime.parse(json['timestamp']),
+      location: json['location'],
+    );
+  }
 }

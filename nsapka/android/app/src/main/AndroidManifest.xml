@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 🔥 Permission réseau OBLIGATOIRE -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="nsapka"
         android:name="${applicationName}"

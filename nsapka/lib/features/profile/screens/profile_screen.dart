@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:nsapka/core/models/order_model.dart';
+import 'package:nsapka/core/utils/order_utils.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/services/auth_service.dart';
@@ -28,11 +30,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   UserModel? _user;
   Map<String, dynamic>? _artisanDetails;
   bool _isLoading = true;
+  List<OrderModel> _recentOrders = [];
+  bool _isLoadingOrders = true;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadRecentOrders();
+  }
+
+  Future<void> _loadRecentOrders() async {
+    setState(() => _isLoadingOrders = true);
+    try {
+      final orders = await RemoteApiService.getMyOrders(limit: 3);
+      if (mounted) {
+        setState(() {
+          _recentOrders = orders;
+          _isLoadingOrders = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Erreur chargement commandes: $e');
+      if (mounted) setState(() => _isLoadingOrders = false);
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -136,6 +157,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.info_outline,
                     child: _buildInfoContent(),
                   ),
+                  const SizedBox(height: 20),
+
+                  _buildOrdersSection(),
+
                   const SizedBox(height: 20),
 
                   if (_user!.role == UserRole.artisan) ...[
@@ -582,6 +607,169 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildOrderRow(OrderModel order) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          // Icône de commande
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: getOrderStatusColor(order.status).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.receipt_long,
+              color: getOrderStatusColor(order.status),
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+
+          // Informations de la commande
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Commande #${order.id}',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      formatOrderDate(order.createdAt),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const Text(' • ', style: TextStyle(color: Colors.grey)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: getOrderStatusColor(
+                          order.status,
+                        ).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        getOrderStatusLabel(order.status),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: getOrderStatusColor(order.status),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Montant total
+          Text(
+            '${order.total.toStringAsFixed(0)} FCFA',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrdersSection() {
+    return _buildContentCard(
+      title: "Mes commandes",
+      icon: Icons.shopping_bag_outlined,
+      child: _isLoadingOrders
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          : _recentOrders.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 48,
+                      color: Colors.grey.shade300,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Aucune commande pour le moment',
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : Column(
+              children: [
+                ..._recentOrders.map(
+                  (order) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: _buildOrderRow(order),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const OrdersListScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.arrow_forward, size: 18),
+                    label: const Text(
+                      'Voir toutes mes commandes',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 
