@@ -24,10 +24,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        GET : public (AllowAny)
-        POST/PUT/DELETE : authentifié (IsAuthenticated)
+        GET & POST (inscription) : public (AllowAny)
+        PUT/DELETE : authentifié (IsAuthenticated)
         """
-        if self.action in ['list', 'retrieve']:
+        if self.action in ['list', 'retrieve', 'create']:
             return [AllowAny()]
         return [IsAuthenticated()]
 

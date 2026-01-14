@@ -99,28 +99,55 @@ class _ArtisanChatScreenState extends State<ArtisanChatScreen> {
   }
 
   Widget _buildChatCard(Map<String, dynamic> chat) {
-    final otherUser = chat['other_user'];
-    final lastMessage = chat['last_message'];
+    // -------------------------------------------------------------------------
+    // CORRECTION DÉFENSIVE : Gestion des champs pouvant arriver en List ou Map
+    // -------------------------------------------------------------------------
+
+    // 1. Sécurisation de "other_user"
+    var rawOtherUser = chat['other_user'];
+    Map<String, dynamic>? otherUser;
+    if (rawOtherUser is List) {
+      if (rawOtherUser.isNotEmpty) {
+        otherUser = rawOtherUser[0] as Map<String, dynamic>;
+      }
+    } else if (rawOtherUser is Map) {
+      otherUser = rawOtherUser as Map<String, dynamic>;
+    }
+
+    // 2. Sécurisation de "last_message"
+    var rawLastMessage = chat['last_message'];
+    Map<String, dynamic>? lastMessage;
+    if (rawLastMessage is List) {
+      if (rawLastMessage.isNotEmpty) {
+        lastMessage = rawLastMessage[0] as Map<String, dynamic>;
+      }
+    } else if (rawLastMessage is Map) {
+      lastMessage = rawLastMessage as Map<String, dynamic>;
+    }
+
     final unreadCount = chat['unread_count'] ?? 0;
+    final otherUserName = otherUser?['name'] ?? 'Utilisateur';
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundImage: otherUser?['profile_image'] != null
-              ? NetworkImage(otherUser!['profile_image'])
+          backgroundColor: AppColors.accent,
+          backgroundImage:
+              otherUser != null && otherUser['profile_image'] != null
+              ? NetworkImage(otherUser['profile_image'])
               : null,
-          child: otherUser?['profile_image'] == null
+          child: otherUser == null || otherUser['profile_image'] == null
               ? Text(
-                  (otherUser?['name']?.toString().isNotEmpty == true)
-                      ? otherUser!['name'].toString()[0].toUpperCase()
+                  otherUserName.isNotEmpty
+                      ? otherUserName[0].toUpperCase()
                       : 'U',
                   style: const TextStyle(color: AppColors.textWhite),
                 )
               : null,
         ),
         title: Text(
-          otherUser?['name'] ?? 'Utilisateur',
+          otherUserName,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: lastMessage != null
@@ -154,7 +181,7 @@ class _ArtisanChatScreenState extends State<ArtisanChatScreen> {
               context,
               MaterialPageRoute(
                 builder: (context) => ChatScreenV2(
-                  otherUserId: otherUser['id'],
+                  otherUserId: otherUser!['id'],
                   currentUserId: currentUser.id,
                 ),
               ),
