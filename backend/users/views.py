@@ -1,6 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from django.db.models import Q 
@@ -9,9 +9,28 @@ from drf_spectacular.utils import extend_schema
 from .models import User
 from .serializers import UserSerializer
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_queryset(self):
+        """Filtrage par rôle si le paramètre ?role=artisan est passé"""
+        queryset = User.objects.all()
+        role = self.request.query_params.get('role')
+        if role:
+            queryset = queryset.filter(role=role)
+        return queryset
+
+    def get_permissions(self):
+        """
+        GET : public (AllowAny)
+        POST/PUT/DELETE : authentifié (IsAuthenticated)
+        """
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
 
 @extend_schema(
     request={
@@ -33,15 +52,12 @@ class UserViewSet(viewsets.ModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    # On récupère le paramètre 'username' envoyé par Flutter
-    # Ce paramètre contient soit le téléphone, soit l'email
     login_input = request.data.get('username')
     password = request.data.get('password')
 
     if not login_input or not password:
         return Response({'error': 'Identifiant et mot de passe requis'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Recherche flexible : Email OU Username (Phone)
     user_obj = User.objects.filter(Q(username=login_input) | Q(email=login_input)).first()
 
     if user_obj is None:
@@ -53,7 +69,6 @@ def login_view(request):
     if not user_obj.is_active:
         return Response({'error': 'Compte désactivé'}, status=status.HTTP_401_UNAUTHORIZED)
 
-    # Génération du token JWT
     refresh = RefreshToken.for_user(user_obj)
     
     return Response({

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nsapka/core/services/api_service.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/data/mock_data.dart';
 import '../../catalog/widgets/enhanced_product_card.dart';
@@ -17,10 +18,7 @@ import '../../../core/services/auth_service.dart';
 class BuyerHomeEnhanced extends StatefulWidget {
   final bool isVisitorMode;
 
-  const BuyerHomeEnhanced({
-    super.key,
-    this.isVisitorMode = false,
-  });
+  const BuyerHomeEnhanced({super.key, this.isVisitorMode = false});
 
   @override
   State<BuyerHomeEnhanced> createState() => _BuyerHomeEnhancedState();
@@ -38,7 +36,7 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
     if (args is Map<String, dynamic>) {
       _isVisitorMode = args['isVisitorMode'] ?? false;
     }
-    
+
     if (!_isVisitorMode && _currentUser == null) {
       _loadUser();
     }
@@ -76,7 +74,10 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
       case 3:
         return CartScreen(isVisitorMode: widget.isVisitorMode);
       case 4:
-        return ProfileScreen(userId: _currentUser?.id, userRole: UserRole.buyer);
+        return ProfileScreen(
+          userId: _currentUser?.id,
+          userRole: UserRole.buyer,
+        );
       default:
         return _buildHomeTab();
     }
@@ -109,7 +110,8 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
             Image.asset(
               'assets/images/image.png',
               fit: BoxFit.cover,
-              errorBuilder: (ctx, err, stack) => Container(color: AppColors.primary),
+              errorBuilder: (ctx, err, stack) =>
+                  Container(color: AppColors.primary),
             ),
             Container(
               decoration: BoxDecoration(
@@ -131,7 +133,10 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.accent,
                       borderRadius: BorderRadius.circular(20),
@@ -146,8 +151,8 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _isVisitorMode 
-                        ? 'Bienvenue, Visiteur 👋' 
+                    _isVisitorMode
+                        ? 'Bienvenue, Visiteur 👋'
                         : 'Bonjour, ${_currentUser?.name.split(' ').first ?? 'Acheteur'} 👋',
                     style: const TextStyle(
                       color: Colors.white,
@@ -158,10 +163,7 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
                   const SizedBox(height: 8),
                   const Text(
                     'Explorez l\'excellence de l\'artisanat africain',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                 ],
               ),
@@ -173,8 +175,6 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
   }
 
   Widget _buildFeaturedArtisans() {
-    final artisans = MockData.artisans.take(3).toList();
-
     return SliverToBoxAdapter(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,15 +204,31 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
             ),
           ),
 
+          // ----------------- Utilisation du FutureBuilder -----------------
           SizedBox(
             height: 200,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              itemCount: artisans.length,
-              itemBuilder: (context, index) {
-                final artisan = artisans[index];
-                return _buildArtisanCard(artisan);
+            child: FutureBuilder<List<UserModel>>(
+              future: RemoteApiService.getArtisans(), // Appel réel au backend
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Erreur: ${snapshot.error}'));
+                }
+                final artisans = snapshot.data?.take(3).toList() ?? [];
+                if (artisans.isEmpty) {
+                  return const Center(child: Text('Aucun artisan disponible'));
+                }
+                return ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  itemCount: artisans.length,
+                  itemBuilder: (context, index) {
+                    final artisan = artisans[index];
+                    return _buildArtisanCard(artisan);
+                  },
+                );
               },
             ),
           ),
@@ -442,31 +458,36 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [
-                    'Sculpture',
-                    'Peinture',
-                    'Tissage',
-                    'Bijoux',
-                    'Décoration',
-                  ].map((specialty) => Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Text(
-                      specialty,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  )).toList(),
+                  children:
+                      [
+                            'Sculpture',
+                            'Peinture',
+                            'Tissage',
+                            'Bijoux',
+                            'Décoration',
+                          ]
+                          .map(
+                            (specialty) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Text(
+                                specialty,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
                 ),
               ],
             ),
@@ -504,7 +525,8 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
         'name': 'Marie Dupont',
         'location': 'Paris, France',
         'rating': 5,
-        'text': '"Exceptionnel ! Ma sculpture Baoulé est arrivée parfaitement emballée."',
+        'text':
+            '"Exceptionnel ! Ma sculpture Baoulé est arrivée parfaitement emballée."',
         'avatar': 'MD',
         'date': 'Il y a 3 jours',
         'verified': true,
@@ -513,16 +535,19 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
         'name': 'Jean Kouassi',
         'location': 'Abidjan, Côte d\'Ivoire',
         'rating': 5,
-        'text': '"Service impeccable ! J\'ai pu discuter directement avec l\'artisan."',
+        'text':
+            '"Service impeccable ! J\'ai pu discuter directement avec l\'artisan."',
         'avatar': 'JK',
-        'date': 'Il y a 1 semaine', // CORRECTION: Virgule et apostrophe fermante ajoutées
+        'date':
+            'Il y a 1 semaine', // CORRECTION: Virgule et apostrophe fermante ajoutées
         'verified': true,
       },
       {
         'name': 'Sarah Johnson',
         'location': 'London, UK',
         'rating': 5,
-        'text': '"N\'SAPKA m\'a fait découvrir l\'artisanat africain authentique."',
+        'text':
+            '"N\'SAPKA m\'a fait découvrir l\'artisanat africain authentique."',
         'avatar': 'SJ',
         'date': 'Il y a 2 semaines',
         'verified': true,
@@ -1018,9 +1043,7 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
                   ],
                 ),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: AppColors.success.withOpacity(0.3),
-                ),
+                border: Border.all(color: AppColors.success.withOpacity(0.3)),
               ),
               child: Column(
                 children: [

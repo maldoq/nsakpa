@@ -225,6 +225,11 @@ class _CartScreenState extends State<CartScreen>
   }
 
   Widget _buildCartItem(CartItemModel item) {
+    final imageUrl =
+        item.product.images.isNotEmpty && item.product.images.first != null
+        ? item.product.images.first
+        : 'https://via.placeholder.com/150';
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -247,7 +252,7 @@ class _CartScreenState extends State<CartScreen>
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                item.product.images.first,
+                imageUrl,
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
@@ -285,7 +290,7 @@ class _CartScreenState extends State<CartScreen>
                   const SizedBox(height: 4),
 
                   Text(
-                    item.product.artisanName,
+                    item.product.artisanName ?? 'Artisan inconnu',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -539,10 +544,9 @@ class _CartScreenState extends State<CartScreen>
       // Note: Le backend crée automatiquement la commande depuis le panier
       // On doit juste fournir l'adresse de livraison
       final order = await ApiService.createOrder(
-        deliveryAddress:
-            'Adresse à définir', // TODO: Récupérer depuis le profil
-        deliveryPhone: '0000000000', // TODO: Récupérer depuis le profil
-        deliveryFee: 2000.0, // Frais de livraison par défaut
+        deliveryAddress: 'Adresse à définir',
+        deliveryPhone: '0000000000',
+        cartItems: cartItems, // ta liste de CartItemModel
       );
 
       if (order != null && mounted) {

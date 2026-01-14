@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+
 class UserSerializer(serializers.ModelSerializer):
     # C'EST LA CORRECTION CRUCIALE :
     # On dit à Django : "Le champ 'name' correspond à 'first_name' dans la BDD"

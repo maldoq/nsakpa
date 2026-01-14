@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:nsapka/core/models/cart_item_model.dart';
 import 'package:nsapka/core/models/order_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -214,18 +215,18 @@ class ApiService {
     return {'success': true}; // On fait semblant que ça a marché
   }
 
-  // Mock: Création de commande
   static Future<Map<String, dynamic>?> createOrder({
     required String deliveryAddress,
     String? deliveryPhone,
+    required List<CartItemModel> cartItems,
     String paymentMethod = 'orange_money',
-    double? deliveryFee,
   }) async {
-    await Future.delayed(const Duration(seconds: 2));
-    return {
-      'id': 'ord_${DateTime.now().millisecondsSinceEpoch}',
-      'status': 'pending',
-    };
+    return RemoteApiService.createOrder(
+      deliveryAddress: deliveryAddress,
+      deliveryPhone: deliveryPhone,
+      cartItems: cartItems,
+      paymentMethod: paymentMethod,
+    );
   }
 
   // Mock: Paiement
@@ -404,7 +405,69 @@ class RemoteApiService {
     }
   }
 
+  // --- Affichage artisan ---
+  static Future<List<UserModel>> getArtisans() async {
+    try {
+      // ✅ PAS DE TOKEN pour les endpoints publics
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/?role=artisan'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => UserModel.fromJson(json)).toList();
+      } else {
+        debugPrint('Erreur getArtisans: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Erreur réseau getArtisans: $e');
+      return [];
+    }
+  }
+
   // --- Commandes utilisateur ---
+
+  static Future<Map<String, dynamic>?> createOrder({
+    required String deliveryAddress,
+    String? deliveryPhone,
+    required List<CartItemModel> cartItems,
+    String paymentMethod = 'orange_money',
+  }) async {
+    try {
+      final token = await AuthService.getToken();
+
+      final body = {
+        'delivery_address': deliveryAddress,
+        'delivery_phone': deliveryPhone,
+        'payment_method': paymentMethod,
+        'items': cartItems
+            .map((e) => {'product_id': e.product.id, 'quantity': e.quantity})
+            .toList(),
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders/'),
+        headers: getHeaders(token: token),
+        body: json.encode(body),
+      );
+
+      if (response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        debugPrint('Erreur createOrder: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Erreur réseau createOrder: $e');
+      return null;
+    }
+  }
+
   static Future<List<OrderModel>> getMyOrders({int? limit}) async {
     try {
       final token = await AuthService.getToken();

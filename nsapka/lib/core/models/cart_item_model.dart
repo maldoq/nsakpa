@@ -1,4 +1,5 @@
 import 'product_model.dart';
+import 'package:flutter/material.dart';
 
 class CartItemModel {
   final String id;
@@ -17,10 +18,12 @@ class CartItemModel {
 
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
-      id: json['id'],
+      id: json['id']?.toString() ?? UniqueKey().toString(),
       product: ProductModel.fromJson(json['product']),
-      quantity: json['quantity'],
-      addedAt: DateTime.parse(json['addedAt']),
+      quantity: json['quantity'] ?? 1,
+      addedAt: json['addedAt'] != null
+          ? DateTime.parse(json['addedAt'])
+          : DateTime.now(),
     );
   }
 
