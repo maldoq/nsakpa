@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 from products.models import Product
 from orders.models import Order, OrderItem
 from users.models import Address # Assurez-vous d'importer Address
+from .models import BlogPost
 
 
 User = get_user_model()
@@ -148,15 +149,37 @@ def artisan_detail(request, pk):
 
 def post_list(request):
     """Liste des articles du blog"""
-    # TODO: Replace with actual blog posts from database
-    posts = []  # Or BlogPost.objects.all() if you have a model
-    return render(request, 'website/blog.html', {'posts': posts})
+    posts = BlogPost.objects.filter(is_published=True).select_related('author')
+    
+    # Filter by category if provided
+    category = request.GET.get('category')
+    if category:
+        posts = posts.filter(category=category)
+    
+    # Pagination
+    paginator = Paginator(posts, 12)
+    page = request.GET.get('page')
+    posts = paginator.get_page(page)
+    
+    return render(request, 'website/blog.html', {
+        'posts': posts,
+        'selected_category': category,
+    })
 
 
 def post_detail(request, pk):
     """Détail d'un article"""
+    post = get_object_or_404(BlogPost, pk=pk, is_published=True)
+    
+    # Get related posts in the same category
+    related_posts = BlogPost.objects.filter(
+        category=post.category,
+        is_published=True
+    ).exclude(pk=pk)[:3]
+    
     context = {
-        'post': None,
+        'post': post,
+        'related_posts': related_posts,
     }
     return render(request, 'website/post_detail.html', context)
 
@@ -340,9 +363,8 @@ def client_profile(request):
     """Profil du client"""
     orders = Order.objects.filter(buyer=request.user).order_by('-created_at')
     
-    # Récupérer les articles de blog si le modèle existe
-    # user_blog_posts = BlogPost.objects.filter(author=request.user) 
-    user_blog_posts = [] 
+    # Récupérer les articles de blog de l'utilisateur
+    user_blog_posts = BlogPost.objects.filter(author=request.user).order_by('-published_at')
 
     context = {
         'user': request.user,
