@@ -40,6 +40,8 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
 
     if (!_isVisitorMode && _currentUser == null) {
       _loadUser();
+      // Charger les favoris depuis l'API
+      FavoritesManager.loadFavorites();
     }
   }
 
@@ -811,18 +813,36 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
                       );
                     },
 
-                    onFavoriteToggle: () {
-                      FavoritesManager.toggleFavorite(product.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            FavoritesManager.isFavorite(product.id)
-                                ? 'Ajouté aux favoris'
-                                : 'Retiré des favoris',
-                          ),
-                          duration: const Duration(seconds: 1),
-                        ),
+                    onFavoriteToggle: () async {
+                      final productId = product.id;
+                      final wasAlreadyFavorite = FavoritesManager.isFavorite(
+                        productId,
                       );
+
+                      final success = await FavoritesManager.toggleFavorite(
+                        productId,
+                      );
+
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              wasAlreadyFavorite
+                                  ? 'Retiré des favoris'
+                                  : 'Ajouté aux favoris',
+                            ),
+                            duration: const Duration(seconds: 1),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      } else if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Erreur lors de la mise à jour'),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
                     },
 
                     onAddToCart: () {

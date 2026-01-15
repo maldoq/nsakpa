@@ -11,10 +11,7 @@ import '../widgets/enhanced_product_card.dart';
 class CatalogScreen extends StatefulWidget {
   final bool isVisitorMode;
 
-  const CatalogScreen({
-    super.key,
-    this.isVisitorMode = false,
-  });
+  const CatalogScreen({super.key, this.isVisitorMode = false});
 
   @override
   State<CatalogScreen> createState() => _CatalogScreenState();
@@ -23,7 +20,7 @@ class CatalogScreen extends StatefulWidget {
 class _CatalogScreenState extends State<CatalogScreen> {
   List<ProductModel> allProducts = [];
   List<ProductModel> filteredProducts = [];
-  
+
   // États de chargement
   bool isLoading = true;
   bool hasError = false;
@@ -61,7 +58,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
     try {
       final products = await ApiService.getProducts();
-      
+
       if (mounted) {
         setState(() {
           allProducts = products;
@@ -165,10 +162,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
             SizedBox(height: 16),
             Text(
               'Chargement des produits...',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
             ),
           ],
         ),
@@ -183,11 +177,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               errorMessage,
@@ -275,43 +265,57 @@ class _CatalogScreenState extends State<CatalogScreen> {
           mainAxisSpacing: 16,
           childAspectRatio: 0.7,
         ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            return EnhancedProductCard(
-              product: filteredProducts[index],
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProductDetailScreen(
-                      product: filteredProducts[index],
-                      isVisitorMode: widget.isVisitorMode,
-                    ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          return EnhancedProductCard(
+            product: filteredProducts[index],
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailScreen(
+                    product: filteredProducts[index],
+                    isVisitorMode: widget.isVisitorMode,
                   ),
-                );
-              },
-              onFavoriteToggle: () {
-                setState(() {
-                  FavoritesManager.toggleFavorite(filteredProducts[index].id);
-                });
+                ),
+              );
+            },
+            onFavoriteToggle: () async {
+              final productId = filteredProducts[index].id;
+              final wasAlreadyFavorite = FavoritesManager.isFavorite(productId);
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      FavoritesManager.isFavorite(filteredProducts[index].id)
-                          ? 'Ajouté aux favoris'
-                          : 'Retiré des favoris',
+              final success = await FavoritesManager.toggleFavorite(productId);
+
+              if (success) {
+                setState(() {});
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        wasAlreadyFavorite
+                            ? 'Retiré des favoris'
+                            : 'Ajouté aux favoris',
+                      ),
+                      duration: const Duration(seconds: 1),
+                      backgroundColor: AppColors.success,
                     ),
-                    duration: const Duration(seconds: 1),
-                  ),
-                );
-              },
-              onAddToCart: () => _addToCart(filteredProducts[index]),
-              isVisitorMode: widget.isVisitorMode,
-            );
-          },
-          childCount: filteredProducts.length,
-        ),
+                  );
+                }
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Erreur lors de la mise à jour'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            onAddToCart: () => _addToCart(filteredProducts[index]),
+            isVisitorMode: widget.isVisitorMode,
+          );
+        }, childCount: filteredProducts.length),
       ),
     );
   }
@@ -379,13 +383,16 @@ class _CatalogScreenState extends State<CatalogScreen> {
               // Nombre de résultats
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Text(
                     '${filteredProducts.length} produit${filteredProducts.length > 1 ? 's' : ''} trouvé${filteredProducts.length > 1 ? 's' : ''}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

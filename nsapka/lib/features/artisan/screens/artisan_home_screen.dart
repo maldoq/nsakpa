@@ -19,11 +19,24 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _buildBody(),
-      bottomNavigationBar: _buildBottomNavigationBar(),
-      floatingActionButton:
-          null, // Le bouton est maintenant dans ArtisanProductsScreen
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          // Rediriger vers la page de sélection de rôle
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/auth-selection',
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
+        body: _buildBody(),
+        bottomNavigationBar: _buildBottomNavigationBar(),
+        floatingActionButton:
+            null, // Le bouton est maintenant dans ArtisanProductsScreen
+      ),
     );
   }
 

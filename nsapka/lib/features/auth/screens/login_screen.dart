@@ -4,6 +4,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/api_service.dart'; // Pour AuthResult
 import '../../../core/models/user_model.dart';
+import '../../../core/utils/favorites_manager.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -18,12 +19,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController(); // Sert pour Email OU Téléphone
+  final _phoneController =
+      TextEditingController(); // Sert pour Email OU Téléphone
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
-  
+
   // _isLogin est true par défaut car c'est un écran de Login.
-  final bool _isLogin = true; 
+  final bool _isLogin = true;
 
   @override
   void dispose() {
@@ -44,13 +46,16 @@ class _LoginScreenState extends State<LoginScreen> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
       );
 
       try {
         // 2. Appel API via AuthService (CORRECTION ICI)
         final result = await AuthService.login(
-          phone: _phoneController.text.trim(), // On utilise 'phone' comme nom de paramètre
+          phone: _phoneController.text
+              .trim(), // On utilise 'phone' comme nom de paramètre
           password: _passwordController.text,
         );
 
@@ -61,6 +66,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         // 4. Gestion du résultat
         if (result.success && result.user != null) {
+          // Charger les favoris après connexion réussie
+          if (result.user!.role == UserRole.buyer) {
+            await FavoritesManager.loadFavorites();
+          }
+
           // Déterminer la route selon le rôle (Acheteur ou Artisan)
           final route = AuthService.getRouteForRole(result.user!.role);
 
@@ -68,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // Navigation et suppression de l'historique pour empêcher le retour au login
             Navigator.of(context).pushNamedAndRemoveUntil(
               route,
-              (route) => false, 
+              (route) => false,
               arguments: {'isVisitorMode': false},
             );
           }
@@ -76,20 +86,20 @@ class _LoginScreenState extends State<LoginScreen> {
           // Erreur
           if (context.mounted) {
             final errorMessage = result.error ?? 'Erreur de connexion';
-            
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(errorMessage),
                 backgroundColor: AppColors.error,
                 behavior: SnackBarBehavior.floating,
-                action: errorMessage.toLowerCase().contains('compte') 
+                action: errorMessage.toLowerCase().contains('compte')
                     ? SnackBarAction(
                         label: 'Créer un compte',
                         textColor: Colors.white,
                         onPressed: () => Navigator.pushNamed(
-                          context, 
+                          context,
                           '/register',
-                          arguments: {'userType': widget.userType}
+                          arguments: {'userType': widget.userType},
                         ),
                       )
                     : null,
@@ -100,9 +110,14 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (e) {
         if (context.mounted) {
           // S'assurer de fermer le dialog si crash
-          Navigator.of(context).popUntil((route) => route.settings.name != null); 
+          Navigator.of(
+            context,
+          ).popUntil((route) => route.settings.name != null);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur inattendue: $e'), backgroundColor: AppColors.error),
+            SnackBar(
+              content: Text('Erreur inattendue: $e'),
+              backgroundColor: AppColors.error,
+            ),
           );
         }
       }
@@ -161,7 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
             gradient: AppColors.primaryGradient,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
             ],
           ),
           child: const Icon(Icons.lock_person, size: 40, color: Colors.white),
@@ -178,7 +197,9 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 8),
         Text(
           "Connectez-vous à votre espace ${widget.userType == 'artisan' ? 'Artisan' : 'Client'}",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
       ],
@@ -191,9 +212,13 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: (isArtisan ? AppColors.secondary : AppColors.primary).withOpacity(0.1),
+          color: (isArtisan ? AppColors.secondary : AppColors.primary)
+              .withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: (isArtisan ? AppColors.secondary : AppColors.primary).withOpacity(0.3)),
+          border: Border.all(
+            color: (isArtisan ? AppColors.secondary : AppColors.primary)
+                .withOpacity(0.3),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -229,11 +254,14 @@ class _LoginScreenState extends State<LoginScreen> {
               labelText: 'Téléphone ou Email',
               hintText: "Ex: 0700000000 ou user@mail.com",
               prefixIcon: const Icon(Icons.person_outline),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey.shade50,
             ),
-            validator: (value) => (value == null || value.isEmpty) ? 'Requis' : null,
+            validator: (value) =>
+                (value == null || value.isEmpty) ? 'Requis' : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
@@ -243,23 +271,34 @@ class _LoginScreenState extends State<LoginScreen> {
               labelText: AppStrings.password,
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
-                icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                icon: Icon(
+                  _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                ),
                 onPressed: _togglePasswordVisibility,
               ),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.grey.shade50,
             ),
-            validator: (value) => (value == null || value.length < 4) ? 'Mot de passe trop court' : null,
+            validator: (value) => (value == null || value.length < 4)
+                ? 'Mot de passe trop court'
+                : null,
           ),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: () => Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (context) => const ForgotPasswordScreen())
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ForgotPasswordScreen(),
+                ),
               ),
-              child: const Text("Mot de passe oublié ?", style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text(
+                "Mot de passe oublié ?",
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             ),
           ),
         ],
@@ -274,14 +313,22 @@ class _LoginScreenState extends State<LoginScreen> {
       child: ElevatedButton(
         onPressed: _submitForm,
         style: ElevatedButton.styleFrom(
-          backgroundColor: widget.userType == 'artisan' ? AppColors.secondary : AppColors.primary,
+          backgroundColor: widget.userType == 'artisan'
+              ? AppColors.secondary
+              : AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: const Text(
           "SE CONNECTER",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1,
+          ),
         ),
       ),
     );
@@ -301,7 +348,9 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text(
             "S'inscrire",
             style: TextStyle(
-              color: widget.userType == 'artisan' ? AppColors.secondary : AppColors.primary,
+              color: widget.userType == 'artisan'
+                  ? AppColors.secondary
+                  : AppColors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -316,7 +365,10 @@ class _LoginScreenState extends State<LoginScreen> {
         Expanded(child: Divider(color: Colors.grey.shade300)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text("OU", style: TextStyle(color: Colors.grey.shade400, fontSize: 12)),
+          child: Text(
+            "OU",
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+          ),
         ),
         Expanded(child: Divider(color: Colors.grey.shade300)),
       ],
@@ -327,10 +379,17 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextButton(
       onPressed: () {
         // Redirection Mode Démo sans API
-        final route = widget.userType == 'artisan' ? '/artisan-home' : '/buyer-home';
-        Navigator.of(context).pushReplacementNamed(route, arguments: {'isVisitorMode': true});
+        final route = widget.userType == 'artisan'
+            ? '/artisan-home'
+            : '/buyer-home';
+        Navigator.of(
+          context,
+        ).pushReplacementNamed(route, arguments: {'isVisitorMode': true});
       },
-      child: const Text("🎭 Continuer en mode invité (Démo)", style: TextStyle(color: Colors.grey)),
+      child: const Text(
+        "🎭 Continuer en mode invité (Démo)",
+        style: TextStyle(color: Colors.grey),
+      ),
     );
   }
 
@@ -338,7 +397,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return TextButton.icon(
       onPressed: () => Navigator.of(context).pop(),
       icon: const Icon(Icons.arrow_back, size: 16, color: Colors.grey),
-      label: const Text("Retour à l'accueil", style: TextStyle(color: Colors.grey)),
+      label: const Text(
+        "Retour à l'accueil",
+        style: TextStyle(color: Colors.grey),
+      ),
     );
   }
 }

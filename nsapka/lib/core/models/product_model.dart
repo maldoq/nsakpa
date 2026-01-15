@@ -70,6 +70,14 @@ class ProductModel {
       return [];
     }
 
+    // 🔥 Debug images
+    final imagesFromJson = parseImages(
+      json['images'] ?? json['images_details'],
+    );
+    if (imagesFromJson.isNotEmpty) {
+      print('🖼️ ProductModel - Images parsées: $imagesFromJson');
+    }
+
     return ProductModel(
       id: json['id'].toString(),
       name: json['name'] ?? '',
@@ -79,7 +87,7 @@ class ProductModel {
       category: json['category'] ?? '',
 
       // 🔥 Utiliser la fonction de parsing
-      images: parseImages(json['images'] ?? json['images_details']),
+      images: imagesFromJson,
 
       videoUrl: json['videoUrl'] ?? json['video_url'],
 

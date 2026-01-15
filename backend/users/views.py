@@ -1,13 +1,14 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from django.db.models import Q 
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema
-from .models import User
+from .models import User, Favorite
 from .serializers import UserSerializer
+from products.serializers import ProductSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -76,3 +77,44 @@ def login_view(request):
         'token': str(refresh.access_token),
         'user': UserSerializer(user_obj).data
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_favorites(request):
+    """Récupérer les favoris de l'utilisateur connecté"""
+    favorites = Favorite.objects.filter(user=request.user).select_related('product')
+    products = [fav.product for fav in favorites]
+    serializer = ProductSerializer(products, many=True, context={'request': request})
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_favorite(request, product_id):
+    """Ajouter un produit aux favoris"""
+    from products.models import Product
+    
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response({'error': 'Produit introuvable'}, status=status.HTTP_404_NOT_FOUND)
+    
+    favorite, created = Favorite.objects.get_or_create(user=request.user, product=product)
+    
+    if created:
+        return Response({'message': 'Ajouté aux favoris'}, status=status.HTTP_201_CREATED)
+    else:
+        return Response({'message': 'Déjà dans les favoris'}, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def remove_favorite(request, product_id):
+    """Retirer un produit des favoris"""
+    try:
+        favorite = Favorite.objects.get(user=request.user, product_id=product_id)
+        favorite.delete()
+        return Response({'message': 'Retiré des favoris'}, status=status.HTTP_200_OK)
+    except Favorite.DoesNotExist:
+        return Response({'error': 'Favori introuvable'}, status=status.HTTP_404_NOT_FOUND)

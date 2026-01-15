@@ -172,6 +172,20 @@ class ApiService {
     return RemoteApiService.deleteProduct(productId);
   }
 
+  // ==================== FAVORIS ====================
+
+  static Future<List<ProductModel>> getFavorites() async {
+    return RemoteApiService.getFavorites();
+  }
+
+  static Future<bool> addFavorite(String productId) async {
+    return RemoteApiService.addFavorite(productId);
+  }
+
+  static Future<bool> removeFavorite(String productId) async {
+    return RemoteApiService.removeFavorite(productId);
+  }
+
   static Future<void> logout() async {
     await LocalDataService.logout();
   }
@@ -596,10 +610,17 @@ class RemoteApiService {
       );
 
       debugPrint('📊 Status: ${response.statusCode}');
-      debugPrint('📄 Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
+
+        // 🔥 Debug: Afficher le premier produit complet
+        if (decoded is List && decoded.isNotEmpty) {
+          debugPrint('🖼️ Premier produit images: ${decoded[0]['images']}');
+          debugPrint(
+            '🖼️ Premier produit images_details: ${decoded[0]['images_details']}',
+          );
+        }
 
         // 🔥 Vérifier si c'est une liste
         if (decoded is! List) {
@@ -639,7 +660,7 @@ class RemoteApiService {
           'stock': stock,
           'category': category,
           'is_limited_edition': isLimitedEdition,
-          'images': images,
+          'images_base64': images,
         }),
       );
       if (response.statusCode == 201)
@@ -699,6 +720,68 @@ class RemoteApiService {
       headers: getHeaders(token: await AuthService.getToken()),
     );
     return response.statusCode == 200 || response.statusCode == 204;
+  }
+
+  // ==================== FAVORIS ====================
+
+  static Future<List<ProductModel>> getFavorites() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/favorites/'),
+        headers: getHeaders(token: await AuthService.getToken()),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => ProductModel.fromJson(json)).toList();
+      }
+      throw Exception('Erreur ${response.statusCode}: ${response.body}');
+    } catch (e) {
+      debugPrint('💥 Erreur getFavorites: $e');
+      rethrow;
+    }
+  }
+
+  static Future<bool> addFavorite(String productId) async {
+    try {
+      debugPrint('🔄 ADD Favorite - Product ID: $productId');
+      debugPrint('🔄 URL: $baseUrl/favorites/$productId/add/');
+
+      final token = await AuthService.getToken();
+      debugPrint('🔑 Token: ${token?.substring(0, 20)}...');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/favorites/$productId/add/'),
+        headers: getHeaders(token: token),
+      );
+
+      debugPrint('📊 Status: ${response.statusCode}');
+      debugPrint('📄 Response: ${response.body}');
+
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      debugPrint('💥 Erreur addFavorite: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> removeFavorite(String productId) async {
+    try {
+      debugPrint('🔄 REMOVE Favorite - Product ID: $productId');
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/favorites/$productId/remove/'),
+        headers: getHeaders(token: await AuthService.getToken()),
+      );
+
+      debugPrint('📊 Status: ${response.statusCode}');
+      debugPrint('📄 Response: ${response.body}');
+
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint('💥 Erreur removeFavorite: $e');
+      return false;
+    }
   }
 }
 

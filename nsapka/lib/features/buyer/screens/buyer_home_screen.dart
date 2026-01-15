@@ -351,8 +351,29 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                   onTap: () {
                     // TODO: Naviguer vers les détails du produit
                   },
-                  onFavoriteToggle: () {
-                    // TODO: Toggle favori
+                  onFavoriteToggle: () async {
+                    final productId = product.id;
+                    final wasAlreadyFavorite = FavoritesManager.isFavorite(
+                      productId,
+                    );
+
+                    final success = await FavoritesManager.toggleFavorite(
+                      productId,
+                    );
+
+                    if (success && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            wasAlreadyFavorite
+                                ? 'Retiré des favoris'
+                                : 'Ajouté aux favoris',
+                          ),
+                          duration: const Duration(seconds: 1),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    }
                   },
                 );
               },
