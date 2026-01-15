@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'config.middleware.DisableCSRFMiddleware',  # Désactive CSRF en dev
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -145,6 +146,28 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Exemption CSRF pour le développement (Flutter Web avec ports dynamiques)
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:61331',
+    'http://127.0.0.1:8000',
+]
+
+# En développement, on peut aussi désactiver CSRF pour les APIs
+# (à ne PAS faire en production !)
+if DEBUG:
+    REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        ),
+        'DEFAULT_PERMISSION_CLASSES': [
+            'rest_framework.permissions.IsAuthenticated',
+        ],
+    }
+    # Exemption complète du CSRF pour toutes les requêtes en dev
+    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_HTTPONLY = False
+    SESSION_COOKIE_SECURE = False
 
 CORS_ALLOW_HEADERS = [
     'accept',

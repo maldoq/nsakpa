@@ -52,7 +52,6 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
     }
   }
 
-
   Future<void> _deleteProduct(String productId) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -66,9 +65,7 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -116,15 +113,13 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _products.isEmpty
-              ? _buildEmptyState()
-              : _buildProductsList(),
+          ? _buildEmptyState()
+          : _buildProductsList(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           final result = await Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const AddProductScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const AddProductScreen()),
           );
           if (result == true) {
             _loadProducts();
@@ -150,9 +145,9 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
           const SizedBox(height: 16),
           Text(
             'Aucun produit',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -200,7 +195,8 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
               // Image
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: product['images'] != null &&
+                child:
+                    product['images'] != null &&
                         (product['images'] as List).isNotEmpty
                     ? Image.network(
                         product['images'][0],
@@ -238,7 +234,7 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${product['price']?.toInt() ?? 0} FCFA',
+                      '${double.tryParse(product['price']?.toString() ?? '0')?.toInt() ?? 0} FCFA',
                       style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.primary,
@@ -281,7 +277,10 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
                       children: [
                         Icon(Icons.delete, size: 20, color: AppColors.error),
                         SizedBox(width: 8),
-                        Text('Supprimer', style: TextStyle(color: AppColors.error)),
+                        Text(
+                          'Supprimer',
+                          style: TextStyle(color: AppColors.error),
+                        ),
                       ],
                     ),
                   ),
@@ -291,7 +290,8 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => EditProductScreen(product: product),
+                        builder: (context) =>
+                            EditProductScreen(product: product),
                       ),
                     ).then((result) {
                       if (result == true) _loadProducts();
@@ -354,12 +354,27 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
               value: _selectedCategory,
               items: [
                 const DropdownMenuItem(value: null, child: Text('Toutes')),
-                const DropdownMenuItem(value: 'sculptures', child: Text('Sculptures')),
-                const DropdownMenuItem(value: 'peintures', child: Text('Peintures')),
-                const DropdownMenuItem(value: 'textiles', child: Text('Textiles')),
+                const DropdownMenuItem(
+                  value: 'sculptures',
+                  child: Text('Sculptures'),
+                ),
+                const DropdownMenuItem(
+                  value: 'peintures',
+                  child: Text('Peintures'),
+                ),
+                const DropdownMenuItem(
+                  value: 'textiles',
+                  child: Text('Textiles'),
+                ),
                 const DropdownMenuItem(value: 'bijoux', child: Text('Bijoux')),
-                const DropdownMenuItem(value: 'poterie', child: Text('Poterie')),
-                const DropdownMenuItem(value: 'vannerie', child: Text('Vannerie')),
+                const DropdownMenuItem(
+                  value: 'poterie',
+                  child: Text('Poterie'),
+                ),
+                const DropdownMenuItem(
+                  value: 'vannerie',
+                  child: Text('Vannerie'),
+                ),
               ],
               onChanged: (value) {
                 setState(() {
@@ -393,4 +408,3 @@ class _ArtisanProductsScreenState extends State<ArtisanProductsScreen> {
     );
   }
 }
-

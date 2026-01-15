@@ -53,7 +53,7 @@ class _CartScreenState extends State<CartScreen>
     return cartItems.fold(0, (sum, item) => sum + item.totalPrice);
   }
 
-  double get deliveryFee => 2000; // Frais de livraison fixes (mockés)
+  double get deliveryFee => 2000.0; // Frais de livraison fixes (mockés)
 
   double get total => subtotal + deliveryFee;
 
@@ -225,8 +225,7 @@ class _CartScreenState extends State<CartScreen>
   }
 
   Widget _buildCartItem(CartItemModel item) {
-    final imageUrl =
-        item.product.images.isNotEmpty && item.product.images.first != null
+    final imageUrl = item.product.images.isNotEmpty
         ? item.product.images.first
         : 'https://via.placeholder.com/150';
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
@@ -24,7 +25,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
   bool _isLimitedEdition = false;
   bool _isRecordingVoice = false;
   List<String> _selectedImages = []; // URLs des images uploadées
-  List<File> _selectedImageFiles = []; // Fichiers locaux pour affichage
+  List<Uint8List> _selectedImageBytes =
+      []; // Bytes pour affichage (compatible Web)
   bool _isSaving = false;
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -69,10 +71,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
       final List<String> base64Images = [];
 
       for (final image in images) {
-        final file = File(image.path);
-
-        // 1. Conversion en Base64 pour l'envoi API
-        final bytes = await file.readAsBytes();
+        // 1. Conversion en Base64 pour l'envoi API (compatible Web)
+        final bytes = await image.readAsBytes();
         final base64String = base64Encode(bytes);
 
         // Format standard pour les API REST (data:image/jpeg;base64,...)
@@ -82,8 +82,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
         base64Images.add(imageHeader);
 
-        // Ajout au fichier local pour l'affichage immédiat dans l'UI
-        _selectedImageFiles.add(file);
+        // Stocker les bytes pour l'affichage immédiat dans l'UI (compatible Web)
+        _selectedImageBytes.add(bytes);
       }
 
       setState(() {
@@ -447,8 +447,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
 
   Widget _buildPhotoItem(String imageUrl) {
     final index = _selectedImages.indexOf(imageUrl);
-    final file = index < _selectedImageFiles.length
-        ? _selectedImageFiles[index]
+    final bytes = index < _selectedImageBytes.length
+        ? _selectedImageBytes[index]
         : null;
 
     return Container(
@@ -462,8 +462,13 @@ class _AddProductScreenState extends State<AddProductScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: file != null
-                ? Image.file(file, width: 120, height: 120, fit: BoxFit.cover)
+            child: bytes != null
+                ? Image.memory(
+                    bytes,
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  )
                 : imageUrl.startsWith('http')
                 ? Image.network(
                     imageUrl,
@@ -494,8 +499,8 @@ class _AddProductScreenState extends State<AddProductScreen> {
                 setState(() {
                   final idx = _selectedImages.indexOf(imageUrl);
                   _selectedImages.removeAt(idx);
-                  if (idx < _selectedImageFiles.length) {
-                    _selectedImageFiles.removeAt(idx);
+                  if (idx < _selectedImageBytes.length) {
+                    _selectedImageBytes.removeAt(idx);
                   }
                 });
               },

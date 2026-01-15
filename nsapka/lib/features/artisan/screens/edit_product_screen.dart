@@ -20,7 +20,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
-  
+
   late String _selectedCategory;
   bool _isLimitedEdition = false;
   List<String> _selectedImages = [];
@@ -41,10 +41,25 @@ class _EditProductScreenState extends State<EditProductScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.product['name'] ?? '');
-    _descriptionController = TextEditingController(text: widget.product['description'] ?? '');
-    _priceController = TextEditingController(text: (widget.product['price'] ?? 0).toString());
-    _stockController = TextEditingController(text: (widget.product['stock'] ?? 0).toString());
-    _selectedCategory = widget.product['category'] ?? 'Sculptures';
+    _descriptionController = TextEditingController(
+      text: widget.product['description'] ?? '',
+    );
+    _priceController = TextEditingController(
+      text: (widget.product['price'] ?? 0).toString(),
+    );
+    _stockController = TextEditingController(
+      text: (widget.product['stock'] ?? 0).toString(),
+    );
+
+    // Normaliser la catégorie pour correspondre à la liste
+    String category = widget.product['category']?.toString() ?? 'Sculptures';
+    // Capitaliser la première lettre
+    category = category[0].toUpperCase() + category.substring(1).toLowerCase();
+    // Vérifier si elle existe dans la liste, sinon utiliser 'Sculptures'
+    _selectedCategory = _categories.contains(category)
+        ? category
+        : 'Sculptures';
+
     _isLimitedEdition = widget.product['is_limited_edition'] ?? false;
     _selectedImages = List<String>.from(widget.product['images'] ?? []);
   }
@@ -72,8 +87,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
       final List<String> imageUrls = [];
       for (final image in images) {
-        final file = File(image.path);
-        final bytes = await file.readAsBytes();
+        final bytes = await image.readAsBytes();
         final base64Image = base64Encode(bytes);
         final imageBase64 = 'data:image/jpeg;base64,$base64Image';
 
@@ -115,13 +129,14 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
     try {
       final product = await ApiService.updateProduct(
-        productId: widget.product['id'],
+        productId: widget.product['id'].toString(),
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         price: double.parse(_priceController.text.trim()),
         stock: int.parse(_stockController.text.trim()),
         category: _selectedCategory.toLowerCase(),
-        images: _selectedImages,
+        // Ne pas envoyer images si ce sont des URLs existantes
+        // images: _selectedImages,
         isLimitedEdition: _isLimitedEdition,
       );
 
@@ -135,10 +150,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
         Navigator.of(context).pop(true);
       }
     } catch (e) {
+      print('❌ Erreur lors de la mise à jour: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
+            content: Text(
+              'Erreur: ${e.toString().replaceAll('Exception:', '')}',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -284,7 +302,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.textWhite),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppColors.textWhite,
+                                ),
                               ),
                             )
                           : const Text('Enregistrer'),
@@ -305,10 +325,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       children: [
         const Text(
           'Photos du produit',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -329,68 +346,84 @@ class _EditProductScreenState extends State<EditProductScreen> {
                   child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_photo_alternate, size: 40, color: AppColors.primary),
+                      Icon(
+                        Icons.add_photo_alternate,
+                        size: 40,
+                        color: AppColors.primary,
+                      ),
                       SizedBox(height: 8),
-                      Text('Ajouter', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Ajouter',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
-              ..._selectedImages.map((imageUrl) => Container(
-                width: 120,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: imageUrl.startsWith('http')
-                          ? Image.network(
-                              imageUrl,
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: 120,
-                                  height: 120,
-                                  color: AppColors.border,
-                                  child: const Icon(Icons.image),
-                                );
-                              },
-                            )
-                          : Container(
-                              width: 120,
-                              height: 120,
-                              color: AppColors.border,
-                              child: const Icon(Icons.image),
+              ..._selectedImages.map(
+                (imageUrl) => Container(
+                  width: 120,
+                  margin: const EdgeInsets.only(right: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: imageUrl.startsWith('http')
+                            ? Image.network(
+                                imageUrl,
+                                width: 120,
+                                height: 120,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: 120,
+                                    height: 120,
+                                    color: AppColors.border,
+                                    child: const Icon(Icons.image),
+                                  );
+                                },
+                              )
+                            : Container(
+                                width: 120,
+                                height: 120,
+                                color: AppColors.border,
+                                child: const Icon(Icons.image),
+                              ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedImages.remove(imageUrl);
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.error,
+                              shape: BoxShape.circle,
                             ),
-                    ),
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedImages.remove(imageUrl);
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: AppColors.error,
-                            shape: BoxShape.circle,
+                            child: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: AppColors.textWhite,
+                            ),
                           ),
-                          child: const Icon(Icons.close, size: 16, color: AppColors.textWhite),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              )),
+              ),
             ],
           ),
         ),
@@ -398,5 +431,3 @@ class _EditProductScreenState extends State<EditProductScreen> {
     );
   }
 }
-
-

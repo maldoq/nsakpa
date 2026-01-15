@@ -8,7 +8,8 @@ class ArtisanOrderDetailScreen extends StatefulWidget {
   const ArtisanOrderDetailScreen({super.key, required this.orderId});
 
   @override
-  State<ArtisanOrderDetailScreen> createState() => _ArtisanOrderDetailScreenState();
+  State<ArtisanOrderDetailScreen> createState() =>
+      _ArtisanOrderDetailScreenState();
 }
 
 class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
@@ -61,8 +62,8 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _orderData == null
-              ? const Center(child: Text('Commande non trouvée'))
-              : _buildOrderDetail(),
+          ? const Center(child: Text('Commande non trouvée'))
+          : _buildOrderDetail(),
     );
   }
 
@@ -84,19 +85,24 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
                 children: [
                   const Text(
                     'Informations Acheteur',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   _buildInfoRow(Icons.person, 'Nom', buyer['name'] ?? 'N/A'),
                   const SizedBox(height: 8),
-                  _buildInfoRow(Icons.phone, 'Téléphone', buyer['phone'] ?? 'N/A'),
+                  _buildInfoRow(
+                    Icons.phone,
+                    'Téléphone',
+                    buyer['phone'] ?? 'N/A',
+                  ),
                   const SizedBox(height: 8),
                   _buildInfoRow(Icons.email, 'Email', buyer['email'] ?? 'N/A'),
                   const SizedBox(height: 8),
-                  _buildInfoRow(Icons.location_on, 'Localisation', buyer['location'] ?? 'N/A'),
+                  _buildInfoRow(
+                    Icons.location_on,
+                    'Localisation',
+                    buyer['location'] ?? 'N/A',
+                  ),
                 ],
               ),
             ),
@@ -111,14 +117,13 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
                 children: [
                   const Text(
                     'Articles',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   if (order['items'] != null)
-                    ...(order['items'] as List).map((item) => _buildOrderItem(item)),
+                    ...(order['items'] as List).map(
+                      (item) => _buildOrderItem(item),
+                    ),
                 ],
               ),
             ),
@@ -133,10 +138,7 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
                 children: [
                   const Text(
                     'Adresse de livraison',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(order['delivery_address'] ?? 'N/A'),
@@ -157,7 +159,10 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
                 children: [
                   _buildTotalRow('Sous-total', order['subtotal'] ?? 0),
                   const SizedBox(height: 8),
-                  _buildTotalRow('Frais de livraison', order['delivery_fee'] ?? 0),
+                  _buildTotalRow(
+                    'Frais de livraison',
+                    order['delivery_fee'] ?? 0,
+                  ),
                   const Divider(height: 24),
                   _buildTotalRow('Total', order['total'] ?? 0, isTotal: true),
                 ],
@@ -198,7 +203,8 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: item['product']?['images'] != null &&
+            child:
+                item['product']?['images'] != null &&
                     (item['product']['images'] as List).isNotEmpty
                 ? Image.network(
                     item['product']['images'][0],
@@ -228,13 +234,11 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
               children: [
                 Text(
                   item['product']?['name'] ?? 'Produit',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Qté: ${item['quantity'] ?? 0} x ${item['price']?.toInt() ?? 0} FCFA',
+                  'Qté: ${item['quantity'] ?? 0} x ${double.tryParse(item['price']?.toString() ?? '0')?.toInt() ?? 0} FCFA',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -244,7 +248,7 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
             ),
           ),
           Text(
-            '${((item['quantity'] ?? 0) * (item['price'] ?? 0)).toInt()} FCFA',
+            '${((item['quantity'] ?? 0) * (double.tryParse(item['price']?.toString() ?? '0') ?? 0)).toInt()} FCFA',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
@@ -278,5 +282,3 @@ class _ArtisanOrderDetailScreenState extends State<ArtisanOrderDetailScreen> {
     );
   }
 }
-
-

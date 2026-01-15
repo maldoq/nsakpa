@@ -349,7 +349,7 @@ class RemoteApiService {
       return 'http://127.0.0.1:8000/api';
     }
     if (Platform.isAndroid) {
-      return 'http://192.168.108.53:8000/api';
+      return 'http://10.0.2.2:8000/api';
     }
     return 'http://127.0.0.1:8000/api';
   }
@@ -635,7 +635,7 @@ class RemoteApiService {
         body: json.encode({
           'name': name,
           'description': description,
-          'price': price.toInt(),
+          'price': price.toInt().toString(),
           'stock': stock,
           'category': category,
           'is_limited_edition': isLimitedEdition,
@@ -666,24 +666,36 @@ class RemoteApiService {
     final body = <String, dynamic>{};
     if (name != null) body['name'] = name;
     if (description != null) body['description'] = description;
-    if (price != null) body['price'] = price.toInt();
+    if (price != null) body['price'] = price.toInt().toString();
     if (stock != null) body['stock'] = stock;
     if (category != null) body['category'] = category;
     if (images != null) body['images'] = images;
     if (isLimitedEdition != null) body['is_limited_edition'] = isLimitedEdition;
 
-    final response = await http.put(
-      Uri.parse('$baseUrl/artisan/products/$productId/update'),
-      headers: getHeaders(token: await AuthService.getToken()),
-      body: json.encode(body),
-    );
-    if (response.statusCode == 200) return json.decode(response.body);
-    return null;
+    try {
+      debugPrint('🔄 UPDATE Product - URL: $baseUrl/products/$productId/');
+      debugPrint('📦 Body: ${json.encode(body)}');
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/products/$productId/'),
+        headers: getHeaders(token: await AuthService.getToken()),
+        body: json.encode(body),
+      );
+
+      debugPrint('📊 Status: ${response.statusCode}');
+      debugPrint('📄 Response: ${response.body}');
+
+      if (response.statusCode == 200) return json.decode(response.body);
+      throw Exception('Erreur ${response.statusCode}: ${response.body}');
+    } catch (e) {
+      debugPrint('💥 Erreur updateProduct: $e');
+      rethrow;
+    }
   }
 
   static Future<bool> deleteProduct(String productId) async {
     final response = await http.delete(
-      Uri.parse('$baseUrl/artisan/products/$productId/delete'),
+      Uri.parse('$baseUrl/products/$productId/'),
       headers: getHeaders(token: await AuthService.getToken()),
     );
     return response.statusCode == 200 || response.statusCode == 204;
