@@ -8,12 +8,13 @@ artisans_patterns = [
 ]
 
 # URLs pour le blog (namespace: blog)
+# Blog patterns - CORRIGÉ (slug pour post_detail, numeric routes avant le slug)
 blog_patterns = [
     path('', views.post_list, name='post_list'),
-    path('<int:pk>/', views.post_detail, name='post_detail'),
     path('create/', views.create_article, name='create_article'),
     path('<int:pk>/update/', views.update_article, name='update_article'),
     path('<int:pk>/delete/', views.delete_article, name='delete_article'),
+    path('<slug:slug>/', views.post_detail, name='post_detail'),  # <- changed to slug and moved last
 ]
 
 # URLs principales du website

@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from .models import BlogPost, Comment
 
 User = get_user_model()
 
@@ -53,3 +54,24 @@ class WebsiteLoginForm(forms.Form):
         label="Mot de passe",
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mot de passe'})
     )
+
+class BlogPostForm(forms.ModelForm):
+    class Meta:
+        model = BlogPost
+        fields = ['title', 'category', 'tags', 'excerpt', 'content', 'featured_image', 'status']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Titre de l\'article'}),
+            'category': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Catégorie (ex: Histoire, Art...)'}),
+            'tags': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tags (séparés par des virgules)'}),
+            'excerpt': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Court résumé...'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 15, 'placeholder': 'Contenu de l\'article...'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Écrivez votre commentaire ici...'}),
+        }

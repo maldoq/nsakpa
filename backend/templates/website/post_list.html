@@ -1,4 +1,3 @@
-
 {% extends 'base/website/base.html' %}
 {% load static %}
 {% block title %}Blog - N'Sapka{% endblock %}
@@ -95,7 +94,7 @@
             <div class="newsletter-content">
                 <h3>Restez informé</h3>
                 <p>Inscrivez-vous à notre newsletter pour recevoir nos derniers articles et découvrir les nouvelles tendances de l'artisanat africain.</p>
-                <form class="newsletter-form" method="POST" action="{% url 'newsletter_subscribe' %}">
+                <form class="newsletter-form" method="POST" action="{% url 'website:newsletter_subscribe' %}">
                     {% csrf_token %}
                     <input type="email" name="email" placeholder="Votre adresse email" required>
                     <button type="submit">

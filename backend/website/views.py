@@ -11,6 +11,9 @@ from django.core.paginator import Paginator
 from products.models import Product
 from orders.models import Order, OrderItem
 from users.models import Address # Assurez-vous d'importer Address
+from django.utils import timezone
+from .models import BlogPost, Comment
+from .forms import BlogPostForm, CommentForm
 
 
 User = get_user_model()
@@ -148,32 +151,102 @@ def artisan_detail(request, pk):
 
 def post_list(request):
     """Liste des articles du blog"""
-    # TODO: Replace with actual blog posts from database
-    posts = []  # Or BlogPost.objects.all() if you have a model
-    return render(request, 'website/blog.html', {'posts': posts})
+    # Récupérer les articles publiés
+    posts_list = BlogPost.objects.filter(status='published').order_by('-published_at')
+    
+    # Filtres
+    category = request.GET.get('category')
+    tag = request.GET.get('tag') # Attention: votre template filter.form.tags envoie peut-être 'tags'
+    
+    if category:
+        posts_list = posts_list.filter(category__icontains=category)
+    # Recherche simple
+    search = request.GET.get('q')
+    if search:
+        posts_list = posts_list.filter(Q(title__icontains=search) | Q(content__icontains=search))
 
+    paginator = Paginator(posts_list, 6)
+    page = request.GET.get('page')
+    posts = paginator.get_page(page)
+    
+    return render(request, 'website/post_list.html', {'page_obj': posts})
 
-def post_detail(request, pk):
-    """Détail d'un article"""
+# ATTENTION : Changez bien pk en slug ici
+def post_detail(request, slug):
+    """Détail d'un article (via slug)"""
+    post = get_object_or_404(BlogPost, slug=slug, status='published')
+    
+    # Incrémenter les vues
+    post.view_count += 1
+    post.save(update_fields=['view_count'])
+    
+    # Commentaires
+    comments = post.comments.filter(active=True)
+    
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+             return redirect('website:login')
+        comment_form = CommentForm(request.POST)
+        if comment_form.is_valid():
+            comment = comment_form.save(commit=False)
+            comment.post = post
+            comment.author = request.user
+            comment.save()
+            messages.success(request, 'Commentaire publié !')
+            return redirect('blog:post_detail', slug=post.slug) # <-- Utilisez slug ici aussi
+    else:
+        comment_form = CommentForm()
+    
+    # Articles similaires (même catégorie)
+    related_posts = BlogPost.objects.filter(category=post.category, status='published').exclude(id=post.id)[:3]
+    
     context = {
-        'post': None,
+        'post': post,
+        'comments': comments,
+        'comment_form': comment_form,
+        'related_posts': related_posts
     }
     return render(request, 'website/post_detail.html', context)
 
-
+@login_required
 def create_article(request):
     """Créer un article"""
-    return render(request, 'website/create_article.html')
+    if request.method == 'POST':
+        form = BlogPostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            messages.success(request, 'Article créé avec succès.')
+            return redirect('website:client_profile')
+    else:
+        form = BlogPostForm()
+    
+    return render(request, 'website/create_article.html', {'form': form})
 
-
+@login_required
 def update_article(request, pk):
     """Modifier un article"""
-    return render(request, 'website/update_article.html')
+    post = get_object_or_404(BlogPost, pk=pk, author=request.user)
+    
+    if request.method == 'POST':
+        form = BlogPostForm(request.POST, request.FILES, instance=post)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Article mis à jour.')
+            return redirect('website:client_profile')
+    else:
+        form = BlogPostForm(instance=post)
+    
+    return render(request, 'website/update_article.html', {'form': form, 'post': post})
 
-
+@login_required
 def delete_article(request, pk):
     """Supprimer un article"""
-    return render(request, 'website/delete_article.html')
+    post = get_object_or_404(BlogPost, pk=pk, author=request.user)
+    post.delete()
+    messages.success(request, 'Article supprimé.')
+    return redirect('website:client_profile')
 
 
 # ==================== PANIER (stocké en session) ====================
@@ -340,17 +413,24 @@ def client_profile(request):
     """Profil du client"""
     orders = Order.objects.filter(buyer=request.user).order_by('-created_at')
     
-    # Récupérer les articles de blog si le modèle existe
-    # user_blog_posts = BlogPost.objects.filter(author=request.user) 
-    user_blog_posts = [] 
+    # Récupérer les articles de blog de l'utilisateur
+    user_blog_posts = BlogPost.objects.filter(author=request.user)
+    
+    # ... code existant pour adresses ...
+    try:
+        from users.models import Address
+        user_addresses = Address.objects.filter(user=request.user)
+        address_types = Address.ADDRESS_TYPE_CHOICES
+    except ImportError:
+        user_addresses = []
+        address_types = []
 
     context = {
         'user': request.user,
         'orders': orders,
-        'user_blog_posts': user_blog_posts,
-        # AJOUTER CES VARIABLES POUR LES ADRESSES :
-        'user_addresses': Address.objects.filter(user=request.user),
-        'address_types': Address.ADDRESS_TYPE_CHOICES, # Assurez-vous que votre modèle a ce champ
+        'user_blog_posts': user_blog_posts, # S'assurer que ceci est passé
+        'user_addresses': user_addresses,
+        'address_types': address_types,
     }
     return render(request, 'website/profile.html', context)
 

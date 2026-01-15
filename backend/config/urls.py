@@ -17,13 +17,15 @@ artisans_patterns = [
     path('apply/', artisan_application, name='artisan_application'),
 ]
 
-# Blog patterns - CORRIGÉ (ajout des routes manquantes)
+# Blog patterns - CORRIGÉ
 blog_patterns = [
     path('', post_list, name='post_list'),
-    path('<int:pk>/', post_detail, name='post_detail'),
     path('create/', create_article, name='create_article'),
     path('<int:pk>/update/', update_article, name='update_article'),
     path('<int:pk>/delete/', delete_article, name='delete_article'),
+    
+    # ICI : On met bien <slug:slug> au lieu de <int:pk> pour le détail
+    path('<slug:slug>/', post_detail, name='post_detail'),
 ]
 
 urlpatterns = [
