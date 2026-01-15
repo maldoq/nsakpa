@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/product_model.dart';
 import '../../../core/services/api_service.dart';
@@ -111,9 +112,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Mes Favoris'),
+        title: Text('favorites'.tr()),
         backgroundColor: AppColors.surface,
         elevation: 0,
         actions: [
@@ -195,7 +195,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Aucun favori',
+            'no_favorites'.tr(),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.bold,
@@ -203,7 +203,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Ajoutez des produits à vos favoris',
+            'add_to_favorites'.tr(),
             style: Theme.of(
               context,
             ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
@@ -215,7 +215,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               Navigator.pushNamed(context, '/catalog');
             },
             icon: const Icon(Icons.explore),
-            label: const Text('Explorer les produits'),
+            label: Text('catalog'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.textWhite,

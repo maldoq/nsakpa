@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/cart_item_model.dart';
 import '../../../core/models/product_model.dart';
@@ -130,9 +131,8 @@ class _CartScreenState extends State<CartScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Mon Panier'),
+        title: Text('cart'.tr()),
         backgroundColor: AppColors.surface,
         elevation: 0,
         leading: IconButton(
@@ -190,7 +190,7 @@ class _CartScreenState extends State<CartScreen>
           ),
           const SizedBox(height: 24),
           Text(
-            'Votre panier est vide',
+            'empty_cart'.tr(),
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.bold,
@@ -198,7 +198,7 @@ class _CartScreenState extends State<CartScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'Ajoutez des produits pour commencer',
+            'add_to_cart'.tr(),
             style: Theme.of(
               context,
             ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
@@ -209,7 +209,7 @@ class _CartScreenState extends State<CartScreen>
               Navigator.pushNamed(context, '/catalog');
             },
             icon: const Icon(Icons.shopping_bag),
-            label: const Text('Découvrir les produits'),
+            label: Text('products'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.textWhite,

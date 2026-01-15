@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/models/user_model.dart';
@@ -58,7 +59,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(isArtisan ? 'Inscription Artisan' : 'Inscription Acheteur'),
+        title: Text(
+          isArtisan ? 'registration_artisan'.tr() : 'registration_buyer'.tr(),
+        ),
         backgroundColor: isArtisan ? AppColors.secondary : AppColors.primary,
         foregroundColor: AppColors.textWhite,
         elevation: 0,
@@ -82,20 +85,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     Expanded(
                       child: _buildTextField(
                         controller: _lastNameController,
-                        label: 'Nom',
+                        label: 'last_name'.tr(),
                         icon: Icons.person,
-                        validator: (value) =>
-                            (value == null || value.isEmpty) ? 'Requis' : null,
+                        validator: (value) => (value == null || value.isEmpty)
+                            ? 'required'.tr()
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: _buildTextField(
                         controller: _firstNameController,
-                        label: 'Prénoms',
+                        label: 'first_name'.tr(),
                         icon: Icons.person_outline,
-                        validator: (value) =>
-                            (value == null || value.isEmpty) ? 'Requis' : null,
+                        validator: (value) => (value == null || value.isEmpty)
+                            ? 'required'.tr()
+                            : null,
                       ),
                     ),
                   ],
@@ -105,11 +110,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 _buildTextField(
                   controller: _emailController,
-                  label: 'Email',
+                  label: 'email'.tr(),
                   icon: Icons.email,
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requis';
+                    if (value == null || value.isEmpty) return 'required'.tr();
                     if (!value.contains('@')) return 'Email invalide';
                     return null;
                   },
@@ -119,22 +124,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 _buildTextField(
                   controller: _phoneController,
-                  label: 'Téléphone',
-                  hint: 'Ex: 0707070707',
+                  label: 'phone'.tr(),
+                  hint: 'phone_or_email_hint'.tr(),
                   icon: Icons.phone,
                   keyboardType: TextInputType.phone,
                   validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Requis' : null,
+                      (value == null || value.isEmpty) ? 'required'.tr() : null,
                 ),
 
                 const SizedBox(height: 16),
 
                 _buildTextField(
                   controller: _locationController,
-                  label: 'Ville / Commune',
+                  label: 'city'.tr(),
                   icon: Icons.location_on,
                   validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Requis' : null,
+                      (value == null || value.isEmpty) ? 'required'.tr() : null,
                 ),
 
                 // Champs spécifiques artisan
@@ -143,8 +148,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const Divider(),
                   const SizedBox(height: 8),
                   Text(
-                    "Informations de l'Atelier",
-                    style: TextStyle(
+                    'artisan_info'.tr(),
+                    style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.bold,
                     ),
@@ -153,31 +158,34 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                   _buildTextField(
                     controller: _standNameController,
-                    label: 'Nom du stand / atelier',
+                    label: 'stand_name'.tr(),
                     icon: Icons.store,
-                    validator: (value) =>
-                        (value == null || value.isEmpty) ? 'Requis' : null,
+                    validator: (value) => (value == null || value.isEmpty)
+                        ? 'required'.tr()
+                        : null,
                   ),
 
                   const SizedBox(height: 16),
 
                   _buildTextField(
                     controller: _standLocationController,
-                    label: 'Adresse exacte de l\'atelier',
+                    label: 'stand_location'.tr(),
                     icon: Icons.pin_drop,
-                    validator: (value) =>
-                        (value == null || value.isEmpty) ? 'Requis' : null,
+                    validator: (value) => (value == null || value.isEmpty)
+                        ? 'required'.tr()
+                        : null,
                   ),
 
                   const SizedBox(height: 16),
 
                   _buildTextField(
                     controller: _bioController,
-                    label: 'Présentation courte',
+                    label: 'bio'.tr(),
                     icon: Icons.description,
                     maxLines: 3,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Requis';
+                      if (value == null || value.isEmpty)
+                        return 'required'.tr();
                       if (value.length < 10) return 'Minimum 10 caractères';
                       return null;
                     },
@@ -188,7 +196,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 _buildTextField(
                   controller: _passwordController,
-                  label: 'Mot de passe',
+                  label: 'password'.tr(),
                   icon: Icons.lock,
                   obscureText: _obscurePassword,
                   suffixIcon: IconButton(
@@ -201,7 +209,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requis';
+                    if (value == null || value.isEmpty) return 'required'.tr();
                     if (value.length < 6) return 'Min 6 caractères';
                     return null;
                   },
@@ -211,7 +219,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 _buildTextField(
                   controller: _confirmPasswordController,
-                  label: 'Confirmer le mot de passe',
+                  label: 'confirm_password'.tr(),
                   icon: Icons.lock_outline,
                   obscureText: _obscureConfirmPassword,
                   suffixIcon: IconButton(
@@ -226,7 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   validator: (value) {
                     if (value != _passwordController.text)
-                      return 'Les mots de passe diffèrent';
+                      return 'passwords_not_match'.tr();
                     return null;
                   },
                 ),
@@ -237,9 +245,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   value: _acceptTerms,
                   onChanged: (value) =>
                       setState(() => _acceptTerms = value ?? false),
-                  title: const Text(
-                    'J\'accepte les conditions d\'utilisation',
-                    style: TextStyle(fontSize: 13),
+                  title: Text(
+                    'terms_of_service'.tr(),
+                    style: const TextStyle(fontSize: 13),
                   ),
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
@@ -271,9 +279,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'S\'INSCRIRE',
-                          style: TextStyle(
+                      : Text(
+                          'register'.tr().toUpperCase(),
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1,
@@ -286,11 +294,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Déjà un compte ? '),
+                    Text('Déjà un compte ? '),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
                       child: Text(
-                        'Se connecter',
+                        'login'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: isArtisan

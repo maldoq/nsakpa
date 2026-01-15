@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
 import '../models/onboarding_model.dart';
 import '../widgets/onboarding_page.dart';
 
@@ -18,18 +18,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingModel> _pages = [
     OnboardingModel(
-      title: AppStrings.onboarding1Title,
-      description: AppStrings.onboarding1Description,
+      title: 'onboarding_title_1'.tr(),
+      description: 'onboarding_description_1'.tr(),
       imagePath: 'assets/images/onboarding1.png',
     ),
     OnboardingModel(
-      title: AppStrings.onboarding2Title,
-      description: AppStrings.onboarding2Description,
+      title: 'onboarding_title_2'.tr(),
+      description: 'onboarding_description_2'.tr(),
       imagePath: 'assets/images/onboarding2.png',
     ),
     OnboardingModel(
-      title: AppStrings.onboarding3Title,
-      description: AppStrings.onboarding3Description,
+      title: 'onboarding_title_3'.tr(),
+      description: 'onboarding_description_3'.tr(),
       imagePath: 'assets/images/onboarding3.png',
     ),
   ];
@@ -73,10 +73,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              AppColors.background,
-              AppColors.sand,
-            ],
+            colors: [AppColors.background, AppColors.sand],
           ),
         ),
         child: SafeArea(
@@ -106,8 +103,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          AppStrings.appName,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          "N'SAPKA",
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 color: AppColors.primary,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -119,7 +117,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       TextButton(
                         onPressed: _skipToEnd,
                         child: Text(
-                          AppStrings.skip,
+                          'skip'.tr(),
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 16,
@@ -184,8 +182,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           children: [
                             Text(
                               _currentPage == _pages.length - 1
-                                  ? AppStrings.getStarted
-                                  : AppStrings.next,
+                                  ? 'get_started'.tr()
+                                  : 'next'.tr(),
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

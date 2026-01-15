@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'core/constants/app_theme.dart';
 import 'core/constants/app_strings.dart';
+import 'core/services/theme_service.dart';
 import 'features/onboarding/screens/onboarding_screen.dart';
 import 'features/auth/screens/auth_selection_screen.dart';
 import 'features/auth/screens/login_screen.dart';
@@ -19,8 +21,12 @@ import 'features/blog/screens/blog_list_screen.dart';
 import 'features/artisans/screens/artisans_list_screen.dart';
 import 'core/models/user_model.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  // Charger le thème sauvegardé
+  await ThemeService().loadTheme();
 
   // Configuration de la barre de statut pour qu'elle soit transparente
   SystemChrome.setSystemUIOverlayStyle(
@@ -30,11 +36,41 @@ void main() {
     ),
   );
 
-  runApp(const NSapkaApp());
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [Locale('fr'), Locale('en')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('fr'),
+      child: const NSapkaApp(),
+    ),
+  );
 }
 
-class NSapkaApp extends StatelessWidget {
+class NSapkaApp extends StatefulWidget {
   const NSapkaApp({super.key});
+
+  @override
+  State<NSapkaApp> createState() => _NSapkaAppState();
+}
+
+class _NSapkaAppState extends State<NSapkaApp> {
+  final ThemeService _themeService = ThemeService();
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _themeService.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +78,11 @@ class NSapkaApp extends StatelessWidget {
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: _themeService.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
 
       // Route initiale
       initialRoute: '/',

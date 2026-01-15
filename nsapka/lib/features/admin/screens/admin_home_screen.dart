@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/models/user_model.dart';
@@ -73,9 +74,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                           const SizedBox(width: 12),
                           Text(
                             "Tableau de bord Admin",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
+                            style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
                                   color: AppColors.textWhite,
                                   fontWeight: FontWeight.bold,
@@ -87,8 +86,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                       Text(
                         "Gestion complète de la plateforme",
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppColors.textWhite.withValues(alpha: 0.9),
-                            ),
+                          color: AppColors.textWhite.withValues(alpha: 0.9),
+                        ),
                       ),
                     ],
                   ),
@@ -104,11 +103,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               // Statistiques
               _buildStatsGrid(),
               const SizedBox(height: 24),
-              
+
               // Graphiques rapides
               _buildQuickStats(),
               const SizedBox(height: 24),
-              
+
               // Actions rapides
               _buildQuickActions(),
             ]),
@@ -128,28 +127,28 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       childAspectRatio: 1.5,
       children: [
         _buildStatCard(
-          title: "Utilisateurs",
+          title: 'customers'.tr(),
           value: "1,234",
           icon: Icons.people,
           color: AppColors.primary,
           onTap: () => setState(() => _currentIndex = 1),
         ),
         _buildStatCard(
-          title: "Produits",
+          title: 'products'.tr(),
           value: "5,678",
           icon: Icons.inventory,
           color: AppColors.secondary,
           onTap: () => setState(() => _currentIndex = 2),
         ),
         _buildStatCard(
-          title: "Commandes",
+          title: 'my_orders'.tr(),
           value: "890",
           icon: Icons.shopping_cart,
           color: AppColors.accent,
           onTap: () => setState(() => _currentIndex = 3),
         ),
         _buildStatCard(
-          title: "Revenus",
+          title: 'revenue'.tr(),
           value: "12.5M",
           subtitle: "FCFA",
           icon: Icons.attach_money,
@@ -207,23 +206,23 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 Text(
                   value,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 if (subtitle != null)
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 const SizedBox(height: 4),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -253,9 +252,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           Text(
             "Aperçu rapide",
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 16),
           _buildQuickStatRow("Artisans actifs", "456", Icons.palette),
@@ -282,18 +281,18 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               const SizedBox(width: 12),
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textPrimary),
               ),
             ],
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
           ),
         ],
       ),
@@ -320,9 +319,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           Text(
             "Actions rapides",
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 16),
           _buildActionButton(
@@ -373,9 +372,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
             Icon(Icons.arrow_forward_ios, color: color, size: 16),
@@ -399,11 +398,26 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           // Filtres
           _buildFilterChips(),
           const SizedBox(height: 16),
-          
+
           // Liste des utilisateurs
-          _buildUserCard("Artisan", "Jean Dupont", "jean@example.com", UserRole.artisan),
-          _buildUserCard("Acheteur", "Marie Martin", "marie@example.com", UserRole.buyer),
-          _buildUserCard("Community Agent", "Paul Durand", "paul@example.com", UserRole.communityAgent),
+          _buildUserCard(
+            "Artisan",
+            "Jean Dupont",
+            "jean@example.com",
+            UserRole.artisan,
+          ),
+          _buildUserCard(
+            "Acheteur",
+            "Marie Martin",
+            "marie@example.com",
+            UserRole.buyer,
+          ),
+          _buildUserCard(
+            "Community Agent",
+            "Paul Durand",
+            "paul@example.com",
+            UserRole.communityAgent,
+          ),
         ],
       ),
     );
@@ -436,7 +450,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     );
   }
 
-  Widget _buildUserCard(String role, String name, String email, UserRole userRole) {
+  Widget _buildUserCard(
+    String role,
+    String name,
+    String email,
+    UserRole userRole,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -475,9 +494,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         backgroundColor: AppColors.secondary,
         foregroundColor: AppColors.textWhite,
       ),
-      body: const Center(
-        child: Text("Gestion des produits - À implémenter"),
-      ),
+      body: const Center(child: Text("Gestion des produits - À implémenter")),
     );
   }
 
@@ -489,9 +506,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.textWhite,
       ),
-      body: const Center(
-        child: Text("Gestion des commandes - À implémenter"),
-      ),
+      body: const Center(child: Text("Gestion des commandes - À implémenter")),
     );
   }
 
@@ -527,7 +542,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
-            title: const Text("Déconnexion", style: TextStyle(color: AppColors.error)),
+            title: const Text(
+              "Déconnexion",
+              style: TextStyle(color: AppColors.error),
+            ),
             onTap: () {
               Navigator.of(context).pushReplacementNamed('/auth');
             },
@@ -544,29 +562,28 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppColors.primary,
       unselectedItemColor: AppColors.textSecondary,
-      items: const [
+      items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard),
-          label: "Dashboard",
+          icon: const Icon(Icons.dashboard),
+          label: 'dashboard'.tr(),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.people),
-          label: "Utilisateurs",
+          icon: const Icon(Icons.people),
+          label: 'customers'.tr(),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.inventory),
-          label: "Produits",
+          icon: const Icon(Icons.inventory),
+          label: 'products'.tr(),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart),
-          label: "Commandes",
+          icon: const Icon(Icons.shopping_cart),
+          label: 'my_orders'.tr(),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.settings),
-          label: "Paramètres",
+          icon: const Icon(Icons.settings),
+          label: 'settings'.tr(),
         ),
       ],
     );
   }
 }
-

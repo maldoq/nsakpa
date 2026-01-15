@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:nsapka/core/models/product_model.dart';
 import 'package:nsapka/core/services/api_service.dart';
 import '../../../core/constants/app_colors.dart';
@@ -1319,11 +1320,11 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(Icons.home, 'Accueil', 0),
-              _buildNavItem(Icons.grid_view, 'Catalogue', 1),
-              _buildNavItem(Icons.favorite, 'Favoris', 2),
-              _buildNavItem(Icons.shopping_cart, 'Panier', 3),
-              _buildNavItem(Icons.person, 'Profil', 4),
+              _buildNavItem(Icons.home, 'home'.tr(), 0),
+              _buildNavItem(Icons.grid_view, 'catalog'.tr(), 1),
+              _buildNavItem(Icons.favorite, 'favorites'.tr(), 2),
+              _buildNavItem(Icons.shopping_cart, 'cart'.tr(), 3),
+              _buildNavItem(Icons.person, 'profile'.tr(), 4),
             ],
           ),
         ),

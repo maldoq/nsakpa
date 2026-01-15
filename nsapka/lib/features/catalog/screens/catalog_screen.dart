@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/product_model.dart';
 import '../../../core/services/api_service.dart';
@@ -362,7 +363,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: RefreshIndicator(
         onRefresh: _loadProducts,
         color: AppColors.primary,
@@ -414,7 +414,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: AppColors.primary),
         onPressed: () => Navigator.of(context).pop(),
-        tooltip: 'Retour',
+        tooltip: 'back'.tr(),
       ),
       title: Container(
         height: 45,

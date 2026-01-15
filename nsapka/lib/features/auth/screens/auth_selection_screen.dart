@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 
@@ -13,11 +14,7 @@ class AuthSelectionScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColors.primary,
-              AppColors.secondary,
-              AppColors.accent,
-            ],
+            colors: [AppColors.primary, AppColors.secondary, AppColors.accent],
           ),
         ),
         child: SafeArea(
@@ -31,56 +28,61 @@ class AuthSelectionScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
-                    
+
                     // Logo et titre
                     _buildHeader(context),
-                    
+
                     const SizedBox(height: 40),
-                    
+
                     // Titre de sélection
                     Text(
-                      AppStrings.selectUserType,
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      'selectUserType'.tr(),
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(
                             color: AppColors.textWhite,
                             fontWeight: FontWeight.bold,
                           ),
                       textAlign: TextAlign.center,
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Carte Acheteur
                     _buildUserTypeCard(
                       context: context,
-                      title: AppStrings.buyer,
-                      subtitle: "Découvrez et achetez des produits artisanaux",
+                      title: 'buyer'.tr(),
+                      subtitle: 'discover_products'.tr(),
                       icon: Icons.shopping_bag,
                       gradient: const LinearGradient(
                         colors: [AppColors.primaryLight, AppColors.primary],
                       ),
                       onTap: () {
-                        Navigator.of(context).pushNamed('/login', arguments: 'buyer');
+                        Navigator.of(
+                          context,
+                        ).pushNamed('/login', arguments: 'buyer');
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Carte Artisan
                     _buildUserTypeCard(
                       context: context,
-                      title: AppStrings.artisan,
-                      subtitle: "Vendez vos créations artisanales",
+                      title: 'artisan'.tr(),
+                      subtitle: 'sell_your_creations'.tr(),
                       icon: Icons.palette,
                       gradient: const LinearGradient(
                         colors: [AppColors.secondaryLight, AppColors.secondary],
                       ),
                       onTap: () {
-                        Navigator.of(context).pushNamed('/login', arguments: 'artisan');
+                        Navigator.of(
+                          context,
+                        ).pushNamed('/login', arguments: 'artisan');
                       },
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Bouton Mode Visiteur
                     TextButton(
                       onPressed: () {
@@ -90,7 +92,10 @@ class AuthSelectionScreen extends StatelessWidget {
                         );
                       },
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -103,8 +108,9 @@ class AuthSelectionScreen extends StatelessWidget {
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              "Continuer en mode visiteur",
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              'visitor_mode'.tr(),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
                                     color: AppColors.textWhite,
                                     fontWeight: FontWeight.w600,
                                     decoration: TextDecoration.underline,
@@ -114,18 +120,18 @@ class AuthSelectionScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
-                    
+
                     // Texte informatif
                     Text(
                       "Choisissez votre profil ou explorez en mode visiteur",
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppColors.textWhite.withOpacity(0.8),
-                          ),
+                        color: AppColors.textWhite.withOpacity(0.8),
+                      ),
                       textAlign: TextAlign.center,
                     ),
-                    
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -161,27 +167,27 @@ class AuthSelectionScreen extends StatelessWidget {
             color: AppColors.primary,
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Nom de l'app
         Text(
           AppStrings.appName,
           style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                color: AppColors.textWhite,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
+            color: AppColors.textWhite,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         // Tagline
         Text(
           AppStrings.appTagline,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.textWhite.withOpacity(0.9),
-              ),
+            color: AppColors.textWhite.withOpacity(0.9),
+          ),
           textAlign: TextAlign.center,
         ),
       ],
@@ -222,15 +228,11 @@ class AuthSelectionScreen extends StatelessWidget {
                 color: AppColors.textWhite.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 35,
-                color: AppColors.textWhite,
-              ),
+              child: Icon(icon, size: 35, color: AppColors.textWhite),
             ),
-            
+
             const SizedBox(width: 20),
-            
+
             // Texte
             Expanded(
               child: Column(
@@ -239,27 +241,23 @@ class AuthSelectionScreen extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppColors.textWhite,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: AppColors.textWhite,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textWhite.withOpacity(0.9),
-                        ),
+                      color: AppColors.textWhite.withOpacity(0.9),
+                    ),
                   ),
                 ],
               ),
             ),
-            
+
             // Flèche
-            Icon(
-              Icons.arrow_forward_ios,
-              color: AppColors.textWhite,
-              size: 24,
-            ),
+            Icon(Icons.arrow_forward_ios, color: AppColors.textWhite, size: 24),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:nsapka/core/models/order_model.dart';
 import 'package:nsapka/core/utils/order_utils.dart';
 import 'package:nsapka/features/orders/screens/order_tracking_screen.dart';
@@ -91,7 +92,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: AppColors.background,
         body: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
@@ -100,7 +100,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (_user == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -121,7 +120,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background, // Gris très clair recommandé
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(),
@@ -140,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
 
                   _buildContentCard(
-                    title: "À propos",
+                    title: 'about'.tr(),
                     icon: Icons.person_outline,
                     child: Text(
                       _artisanDetails?['bio'] ??
@@ -663,31 +661,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Text(
-                        formatOrderDate(order.createdAt),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey.shade600,
+                      Flexible(
+                        child: Text(
+                          formatOrderDate(order.createdAt),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const Text(' • ', style: TextStyle(color: Colors.grey)),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: getOrderStatusColor(
-                            order.status,
-                          ).withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          getOrderStatusLabel(order.status),
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: getOrderStatusColor(order.status),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: getOrderStatusColor(
+                              order.status,
+                            ).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            getOrderStatusLabel(order.status),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: getOrderStatusColor(order.status),
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),
@@ -778,9 +782,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     },
                     icon: const Icon(Icons.arrow_forward, size: 18),
-                    label: const Text(
-                      'Voir toutes mes commandes',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    label: Text(
+                      'view_all_orders'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
@@ -802,7 +806,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         if (_user!.role == UserRole.artisan) ...[
           _buildActionButton(
-            label: 'Gérer mes Produits',
+            label: 'manage_products'.tr(),
             icon: Icons.inventory_2,
             color: AppColors.primary,
             onPressed: () => Navigator.pushNamed(context, '/catalog'),
@@ -825,7 +829,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onPressed: _showLogoutDialog,
           icon: Icon(Icons.logout, color: Colors.red.shade400, size: 20),
           label: Text(
-            'Se déconnecter',
+            'logout'.tr(),
             style: TextStyle(
               color: Colors.red.shade400,
               fontWeight: FontWeight.w600,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import 'artisan_products_screen.dart';
@@ -77,14 +78,14 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
         backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.inventory),
-            label: 'Produits',
+            icon: const Icon(Icons.inventory),
+            label: 'products'.tr(),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
-            label: 'Commandes',
+            icon: const Icon(Icons.receipt),
+            label: 'my_orders'.tr(),
           ),
           BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Messages'),
           BottomNavigationBarItem(

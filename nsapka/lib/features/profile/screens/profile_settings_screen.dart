@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/user_model.dart';
 import '../../../core/data/mock_data.dart';
+import '../../../core/services/theme_service.dart';
 import '../../chat/screens/chat_screen_v2.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
@@ -21,8 +23,7 @@ class ProfileSettingsScreen extends StatefulWidget {
 class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late UserModel user;
   bool notificationsEnabled = true;
-  bool darkMode = false;
-  String selectedLanguage = 'fr';
+  final ThemeService _themeService = ThemeService();
 
   @override
   void initState() {
@@ -45,7 +46,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Paramètres'),
+        title: Text('settings'.tr()),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textWhite,
         leading: IconButton(
@@ -57,10 +58,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       body: ListView(
         children: [
           // Section Notifications
-          _buildSectionHeader('Notifications'),
+          _buildSectionHeader('notifications'.tr()),
           _buildSwitchTile(
-            title: 'Notifications push',
-            subtitle: 'Recevoir des notifications sur les nouvelles commandes',
+            title: 'push_notifications'.tr(),
+            subtitle: 'receive_notifications'.tr(),
             value: notificationsEnabled,
             onChanged: (value) {
               setState(() => notificationsEnabled = value);
@@ -68,57 +69,64 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           ),
 
           // Section Apparence
-          _buildSectionHeader('Apparence'),
+          _buildSectionHeader('appearance'.tr()),
           _buildSwitchTile(
-            title: 'Mode sombre',
-            subtitle: 'Activer le thème sombre',
-            value: darkMode,
-            onChanged: (value) {
-              setState(() => darkMode = value);
+            title: 'dark_mode'.tr(),
+            subtitle: 'enable_dark_theme'.tr(),
+            value: _themeService.isDarkMode,
+            onChanged: (value) async {
+              await _themeService.setTheme(value);
+              setState(() {});
             },
           ),
 
           // Section Langue
-          _buildSectionHeader('Langue'),
+          _buildSectionHeader('language'.tr()),
           _buildLanguageSelector(),
 
           // Section Sécurité
-          _buildSectionHeader('Sécurité'),
+          _buildSectionHeader('security'.tr()),
           _buildMenuTile(
-            title: 'Changer le mot de passe',
+            title: 'change_password'.tr(),
             subtitle: 'Modifier votre mot de passe',
             icon: Icons.lock,
             onTap: () => _showChangePasswordDialog(),
           ),
 
           // Section Support
-          _buildSectionHeader('Support'),
+          _buildSectionHeader('support'.tr()),
           _buildMenuTile(
-            title: 'Centre d\'aide',
-            subtitle: 'FAQ et guides d\'utilisation',
+            title: 'help_center'.tr(),
+            subtitle: 'faq'.tr(),
             icon: Icons.help,
             onTap: () => _showHelpDialog(),
           ),
           _buildMenuTile(
-            title: 'Contacter le support',
-            subtitle: 'Envoyer un message au support',
+            title: 'contact_support'.tr(),
+            subtitle: 'send_message'.tr(),
             icon: Icons.support_agent,
             onTap: () => _showSupportDialog(),
           ),
 
           // Section Légal
-          _buildSectionHeader('Informations légales'),
+          _buildSectionHeader('legal_info'.tr()),
           _buildMenuTile(
-            title: 'Conditions d\'utilisation',
-            subtitle: 'Lire les conditions générales',
+            title: 'terms_of_service'.tr(),
+            subtitle: 'read_terms'.tr(),
             icon: Icons.description,
-            onTap: () => _showLegalDialog('Conditions d\'utilisation', 'Contenu des conditions...'),
+            onTap: () => _showLegalDialog(
+              'Conditions d\'utilisation',
+              'Contenu des conditions...',
+            ),
           ),
           _buildMenuTile(
-            title: 'Politique de confidentialité',
-            subtitle: 'Lire notre politique de confidentialité',
+            title: 'privacy_policy'.tr(),
+            subtitle: 'read_privacy'.tr(),
             icon: Icons.privacy_tip,
-            onTap: () => _showLegalDialog('Politique de confidentialité', 'Contenu de la politique...'),
+            onTap: () => _showLegalDialog(
+              'Politique de confidentialité',
+              'Contenu de la politique...',
+            ),
           ),
 
           // Section Compte
@@ -139,10 +147,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             child: Center(
               child: Text(
                 'Version 1.0.0',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
               ),
             ),
           ),
@@ -183,9 +188,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   }
 
   Widget _buildLanguageSelector() {
+    final currentLocale = context.locale;
+    final languageName = currentLocale?.languageCode == 'fr'
+        ? 'Français'
+        : 'English';
+
     return ListTile(
-      title: const Text('Langue'),
-      subtitle: Text(_getLanguageName(selectedLanguage)),
+      title: Text('language'.tr()),
+      subtitle: Text(languageName),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () => _showLanguageDialog(),
     );
@@ -207,49 +217,32 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
-  String _getLanguageName(String code) {
-    switch (code) {
-      case 'fr':
-        return 'Français';
-      case 'en':
-        return 'English';
-      case 'es':
-        return 'Español';
-      default:
-        return 'Français';
-    }
-  }
-
   void _showLanguageDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Choisir la langue'),
+        title: Text('choose_language'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('Français'),
-              trailing: selectedLanguage == 'fr' ? const Icon(Icons.check) : null,
-              onTap: () {
-                setState(() => selectedLanguage = 'fr');
-                Navigator.pop(context);
+              title: Text('french'.tr()),
+              trailing: context.locale?.languageCode == 'fr'
+                  ? const Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () async {
+                await context.setLocale(const Locale('fr'));
+                if (mounted) Navigator.pop(context);
               },
             ),
             ListTile(
-              title: const Text('English'),
-              trailing: selectedLanguage == 'en' ? const Icon(Icons.check) : null,
-              onTap: () {
-                setState(() => selectedLanguage = 'en');
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              title: const Text('Español'),
-              trailing: selectedLanguage == 'es' ? const Icon(Icons.check) : null,
-              onTap: () {
-                setState(() => selectedLanguage = 'es');
-                Navigator.pop(context);
+              title: Text('english'.tr()),
+              trailing: context.locale?.languageCode == 'en'
+                  ? const Icon(Icons.check, color: AppColors.primary)
+                  : null,
+              onTap: () async {
+                await context.setLocale(const Locale('en'));
+                if (mounted) Navigator.pop(context);
               },
             ),
           ],
@@ -263,7 +256,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Changer le mot de passe'),
-        content: const Text('Fonctionnalité à venir dans la prochaine version.'),
+        content: const Text(
+          'Fonctionnalité à venir dans la prochaine version.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -279,7 +274,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Centre d\'aide'),
-        content: const Text('Consultez notre FAQ et nos guides d\'utilisation en ligne.'),
+        content: const Text(
+          'Consultez notre FAQ et nos guides d\'utilisation en ligne.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -344,9 +341,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(title),
-        content: SingleChildScrollView(
-          child: Text(content),
-        ),
+        content: SingleChildScrollView(child: Text(content)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

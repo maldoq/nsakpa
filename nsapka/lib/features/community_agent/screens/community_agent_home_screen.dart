@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 
@@ -6,7 +7,8 @@ class CommunityAgentHomeScreen extends StatefulWidget {
   const CommunityAgentHomeScreen({super.key});
 
   @override
-  State<CommunityAgentHomeScreen> createState() => _CommunityAgentHomeScreenState();
+  State<CommunityAgentHomeScreen> createState() =>
+      _CommunityAgentHomeScreenState();
 }
 
 class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
@@ -72,9 +74,7 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
                           const SizedBox(width: 12),
                           Text(
                             "Community Agent",
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
+                            style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
                                   color: AppColors.textWhite,
                                   fontWeight: FontWeight.bold,
@@ -86,8 +86,8 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
                       Text(
                         "Soutenez les artisans de votre communauté",
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppColors.textWhite.withValues(alpha: 0.9),
-                            ),
+                          color: AppColors.textWhite.withValues(alpha: 0.9),
+                        ),
                       ),
                     ],
                   ),
@@ -103,11 +103,11 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
               // Mes statistiques
               _buildMyStats(),
               const SizedBox(height: 24),
-              
+
               // Tâches en attente
               _buildPendingTasks(),
               const SizedBox(height: 24),
-              
+
               // Artisans assignés
               _buildAssignedArtisans(),
             ]),
@@ -135,20 +135,30 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Mes statistiques",
+            'statistics'.tr(),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
-                child: _buildStatItem("Artisans", "24", Icons.palette, AppColors.primary),
+                child: _buildStatItem(
+                  "Artisans",
+                  "24",
+                  Icons.palette,
+                  AppColors.primary,
+                ),
               ),
               Expanded(
-                child: _buildStatItem("Validations", "156", Icons.check_circle, AppColors.success),
+                child: _buildStatItem(
+                  "Validations",
+                  "156",
+                  Icons.check_circle,
+                  AppColors.success,
+                ),
               ),
             ],
           ),
@@ -156,10 +166,20 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildStatItem("En attente", "8", Icons.pending, AppColors.warning),
+                child: _buildStatItem(
+                  "En attente",
+                  "8",
+                  Icons.pending,
+                  AppColors.warning,
+                ),
               ),
               Expanded(
-                child: _buildStatItem("Support", "12", Icons.support_agent, AppColors.accent),
+                child: _buildStatItem(
+                  "Support",
+                  "12",
+                  Icons.support_agent,
+                  AppColors.accent,
+                ),
               ),
             ],
           ),
@@ -168,7 +188,12 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       margin: const EdgeInsets.all(4),
       padding: const EdgeInsets.all(12),
@@ -183,15 +208,15 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
         ],
@@ -222,9 +247,9 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
               Text(
                 "Tâches en attente",
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
               TextButton(
                 onPressed: () => setState(() => _currentIndex = 2),
@@ -233,17 +258,37 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildTaskItem("Valider produit", "Masque traditionnel", "Artisan: Jean Dupont", Icons.check_circle),
+          _buildTaskItem(
+            "Valider produit",
+            "Masque traditionnel",
+            "Artisan: Jean Dupont",
+            Icons.check_circle,
+          ),
           const Divider(),
-          _buildTaskItem("Vérifier artisan", "Nouvel artisan", "Marie Martin", Icons.verified_user),
+          _buildTaskItem(
+            "Vérifier artisan",
+            "Nouvel artisan",
+            "Marie Martin",
+            Icons.verified_user,
+          ),
           const Divider(),
-          _buildTaskItem("Support client", "Problème de commande", "Commande #1234", Icons.support_agent),
+          _buildTaskItem(
+            "Support client",
+            "Problème de commande",
+            "Commande #1234",
+            Icons.support_agent,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTaskItem(String type, String title, String subtitle, IconData icon) {
+  Widget _buildTaskItem(
+    String type,
+    String title,
+    String subtitle,
+    IconData icon,
+  ) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -283,9 +328,9 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
               Text(
                 "Artisans assignés",
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
               TextButton(
                 onPressed: () => setState(() => _currentIndex = 1),
@@ -302,7 +347,12 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
     );
   }
 
-  Widget _buildArtisanCard(String name, String specialty, String info, bool isVerified) {
+  Widget _buildArtisanCard(
+    String name,
+    String specialty,
+    String info,
+    bool isVerified,
+  ) {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
@@ -339,12 +389,7 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
         title: const Text("Mes artisans"),
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.textWhite,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -402,7 +447,9 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
             width: double.infinity,
             decoration: BoxDecoration(
               color: AppColors.background,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
             child: Image.asset(
               imageUrl,
@@ -419,16 +466,16 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
               children: [
                 Text(
                   productName,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   "Par $artisanName",
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(description),
@@ -478,15 +525,35 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSupportCard("Problème de commande", "Commande #1234", "En attente", Icons.shopping_cart),
-          _buildSupportCard("Question artisan", "Jean Dupont", "En cours", Icons.palette),
-          _buildSupportCard("Problème de paiement", "Commande #5678", "Résolu", Icons.payment),
+          _buildSupportCard(
+            "Problème de commande",
+            "Commande #1234",
+            "En attente",
+            Icons.shopping_cart,
+          ),
+          _buildSupportCard(
+            "Question artisan",
+            "Jean Dupont",
+            "En cours",
+            Icons.palette,
+          ),
+          _buildSupportCard(
+            "Problème de paiement",
+            "Commande #5678",
+            "Résolu",
+            Icons.payment,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSupportCard(String title, String subtitle, String status, IconData icon) {
+  Widget _buildSupportCard(
+    String title,
+    String subtitle,
+    String status,
+    IconData icon,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -527,7 +594,11 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor: AppColors.primary,
-                  child: const Icon(Icons.person, size: 50, color: AppColors.textWhite),
+                  child: const Icon(
+                    Icons.person,
+                    size: 50,
+                    color: AppColors.textWhite,
+                  ),
                 ),
                 Positioned(
                   bottom: 0,
@@ -538,7 +609,11 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
                       color: AppColors.accent,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.camera_alt, size: 16, color: AppColors.textWhite),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      size: 16,
+                      color: AppColors.textWhite,
+                    ),
                   ),
                 ),
               ],
@@ -574,7 +649,10 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
           ),
           ListTile(
             leading: const Icon(Icons.logout, color: AppColors.error),
-            title: const Text("Déconnexion", style: TextStyle(color: AppColors.error)),
+            title: const Text(
+              "Déconnexion",
+              style: TextStyle(color: AppColors.error),
+            ),
             onTap: () {
               Navigator.of(context).pushReplacementNamed('/auth');
             },
@@ -591,29 +669,28 @@ class _CommunityAgentHomeScreenState extends State<CommunityAgentHomeScreen> {
       type: BottomNavigationBarType.fixed,
       selectedItemColor: AppColors.accent,
       unselectedItemColor: AppColors.textSecondary,
-      items: const [
+      items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.dashboard),
-          label: "Dashboard",
+          icon: const Icon(Icons.dashboard),
+          label: 'dashboard'.tr(),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.palette),
-          label: "Artisans",
+          icon: const Icon(Icons.palette),
+          label: 'artisans'.tr(),
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.verified_user),
+          icon: const Icon(Icons.verified_user),
           label: "Validation",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.support_agent),
+          icon: const Icon(Icons.support_agent),
           label: "Support",
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: "Profil",
+          icon: const Icon(Icons.person),
+          label: 'profile'.tr(),
         ),
       ],
     );
   }
 }
-

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/data/mock_data.dart';
@@ -102,7 +103,7 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "Découvrez l'artisanat authentique",
+                        'discover_products'.tr(),
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           color: AppColors.textWhite.withOpacity(0.9),
                         ),

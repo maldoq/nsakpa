@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/services/auth_service.dart';
@@ -187,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          AppStrings.welcomeBack,
+          'welcome_back'.tr(),
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.bold,
@@ -196,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          "Connectez-vous à votre espace ${widget.userType == 'artisan' ? 'Artisan' : 'Client'}",
+          '${"connect_to_space".tr()} ${widget.userType == 'artisan' ? 'artisan_space'.tr() : 'buyer_space'.tr()}',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
@@ -230,7 +231,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              isArtisan ? "Espace Artisan" : "Espace Acheteur",
+              widget.userType == 'artisan'
+                  ? 'artisan_space'.tr()
+                  : 'buyer_space'.tr(),
               style: TextStyle(
                 color: isArtisan ? AppColors.secondary : AppColors.primary,
                 fontWeight: FontWeight.bold,
@@ -251,24 +254,19 @@ class _LoginScreenState extends State<LoginScreen> {
             controller: _phoneController,
             keyboardType: TextInputType.emailAddress, // Accepte email ou tel
             decoration: InputDecoration(
-              labelText: 'Téléphone ou Email',
-              hintText: "Ex: 0700000000 ou user@mail.com",
+              labelText: 'phone_or_email'.tr(),
+              hintText: 'phone_or_email_hint'.tr(),
               prefixIcon: const Icon(Icons.person_outline),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade50,
             ),
             validator: (value) =>
-                (value == null || value.isEmpty) ? 'Requis' : null,
+                (value == null || value.isEmpty) ? 'required'.tr() : null,
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
             obscureText: !_isPasswordVisible,
             decoration: InputDecoration(
-              labelText: AppStrings.password,
+              labelText: 'password'.tr(),
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(
@@ -276,15 +274,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 onPressed: _togglePasswordVisibility,
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade50,
             ),
-            validator: (value) => (value == null || value.length < 4)
-                ? 'Mot de passe trop court'
-                : null,
+            validator: (value) =>
+                (value == null || value.length < 4) ? 'required'.tr() : null,
           ),
           Align(
             alignment: Alignment.centerRight,
@@ -295,9 +287,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   builder: (context) => const ForgotPasswordScreen(),
                 ),
               ),
-              child: const Text(
-                "Mot de passe oublié ?",
-                style: TextStyle(color: AppColors.textSecondary),
+              child: Text(
+                'forgot_password'.tr(),
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             ),
           ),
@@ -322,9 +314,9 @@ class _LoginScreenState extends State<LoginScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text(
-          "SE CONNECTER",
-          style: TextStyle(
+        child: Text(
+          'sign_in'.tr().toUpperCase(),
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,
@@ -338,7 +330,8 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Pas encore de compte ? "),
+        Text('no_account'.tr()),
+        const SizedBox(width: 4),
         GestureDetector(
           onTap: () => Navigator.pushNamed(
             context,
@@ -346,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen> {
             arguments: {'userType': widget.userType},
           ),
           child: Text(
-            "S'inscrire",
+            'register'.tr(),
             style: TextStyle(
               color: widget.userType == 'artisan'
                   ? AppColors.secondary
