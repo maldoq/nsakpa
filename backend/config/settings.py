@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     'products',
     'orders',
     'social',
+    'website',      # Site web public
+    'dashboard',    # Tableau de bord artisan
     'drf_spectacular',
 ]
 
@@ -62,13 +64,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+# Configuration des templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],  # ← Ajout du dossier templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -125,7 +129,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# Dossier où Django collectera tous les fichiers statiques (pour la production)
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Dossiers où Django cherche les fichiers statiques en développement
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -157,6 +170,11 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+
+# Media files (uploaded by users - images produits, photos profil, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # Configuration de la documentation

@@ -7,6 +7,11 @@ from rest_framework.permissions import IsAuthenticated
 from django.db import transaction
 from .models import Order, OrderItem
 from .serializers import OrderSerializer
+from django.shortcuts import render, get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect
+from users.models import User
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -224,3 +229,64 @@ class OrderViewSet(viewsets.ModelViewSet):
             "success": True,
             "message": "Commande annulée"
         })
+
+def home(request):
+    """Page d'accueil du site"""
+    return render(request, 'website/home.html')
+
+def artisans_list(request):
+    """Liste des artisans"""
+    artisans = User.objects.filter(role='artisan')
+    return render(request, 'website/artisans.html', {'artisans': artisans})
+
+def artisan_detail(request, pk):
+    """Détail d'un artisan"""
+    artisan = get_object_or_404(User, pk=pk, role='artisan')
+    return render(request, 'website/artisan_detail.html', {'artisan': artisan})
+
+@csrf_protect
+@require_POST
+def artisan_application(request):
+    """Handle artisan application form submission"""
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Get form data
+        full_name = request.POST.get('full_name', '').strip()
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        country = request.POST.get('country', '').strip()
+        craft_type = request.POST.get('craft_type', '').strip()
+        experience = request.POST.get('experience', '').strip()
+        description = request.POST.get('description', '').strip()
+        
+        errors = {}
+        
+        # Basic validation
+        if not full_name:
+            errors['full_name'] = 'Le nom complet est requis'
+        if not email:
+            errors['email'] = 'L\'email est requis'
+        if not phone:
+            errors['phone'] = 'Le téléphone est requis'
+        if not country:
+            errors['country'] = 'Le pays est requis'
+        if not craft_type:
+            errors['craft_type'] = 'Le type d\'artisanat est requis'
+        if not experience:
+            errors['experience'] = 'L\'expérience est requise'
+        if not description:
+            errors['description'] = 'La description est requise'
+        
+        if not request.POST.get('terms_accepted'):
+            errors['terms_accepted'] = 'Vous devez accepter les conditions'
+        
+        if errors:
+            return JsonResponse({'success': False, 'errors': errors})
+        
+        # TODO: Save the application to database or send email notification
+        return JsonResponse({
+            'success': True,
+            'message': 'Votre candidature a été envoyée avec succès ! Nous vous contacterons bientôt.'
+        })
+    
+    # Non-AJAX request
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)

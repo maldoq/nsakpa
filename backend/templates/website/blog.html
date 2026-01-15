@@ -1,0 +1,18 @@
+{% extends 'base/website/base.html' %}
+
+{% block title %}Blog - N'SAPKA{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Blog N'SAPKA</h1>
+    <p>Articles à venir...</p>
+    {% for post in posts %}
+        <article>
+            <h2>{{ post.title }}</h2>
+            <p>{{ post.content|truncatewords:50 }}</p>
+        </article>
+    {% empty %}
+        <p>Aucun article pour le moment.</p>
+    {% endfor %}
+</div>
+{% endblock %}
