@@ -62,10 +62,13 @@
                 </div>
 
                 <!-- Bouton de paiement -->
-                <!-- AJOUT DE 'website:' -->
-                <a class="checkout-btn" href="{% url 'website:payment' %}">
-                    Procéder au paiement
-                </a>
+                <form id="checkout-form" method="POST" action="{% url 'website:payment' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="cart_data" id="cart-data-input">
+                    <button type="submit" class="checkout-btn" id="checkout-btn" disabled>
+                        Procéder au paiement
+                    </button>
+                </form>
 
                 <!-- Continuer les achats -->
                 <div class="cart-links">
@@ -93,5 +96,31 @@
 
 <!-- Script du panier -->
 <script src="{% static 'js/website/cart.js' %}"></script>
+
+<style>
+    .checkout-btn {
+        width: 100%;
+        padding: 1rem;
+        background-color: var(--primary-color, #D4A574);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .checkout-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .checkout-btn:not(:disabled):hover {
+        background-color: var(--primary-dark, #C49664);
+        transform: translateY(-2px);
+    }
+</style>
 
 {% endblock %}

@@ -9,7 +9,13 @@ from django.views.decorators.http import require_POST
 from .forms import WebsiteLoginForm, WebsiteRegistrationForm
 from django.core.paginator import Paginator
 from products.models import Product
+from orders.services import PaymentService
 from orders.models import Order, OrderItem
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
 from users.models import Address # Assurez-vous d'importer Address
 from django.utils import timezone
 from .models import BlogPost, Comment
@@ -171,12 +177,11 @@ def post_list(request):
     
     return render(request, 'website/post_list.html', {'page_obj': posts})
 
-# ATTENTION : Changez bien pk en slug ici
 def post_detail(request, slug):
-    """Détail d'un article (via slug)"""
+    """Détail d'un article"""
     post = get_object_or_404(BlogPost, slug=slug, status='published')
     
-    # Incrémenter les vues
+    # Incrémenter les vues (simple)
     post.view_count += 1
     post.save(update_fields=['view_count'])
     
@@ -193,7 +198,7 @@ def post_detail(request, slug):
             comment.author = request.user
             comment.save()
             messages.success(request, 'Commentaire publié !')
-            return redirect('blog:post_detail', slug=post.slug) # <-- Utilisez slug ici aussi
+            return redirect('blog:post_detail', slug=slug)
     else:
         comment_form = CommentForm()
     
@@ -242,12 +247,12 @@ def update_article(request, pk):
 
 @login_required
 def delete_article(request, pk):
+    
     """Supprimer un article"""
     post = get_object_or_404(BlogPost, pk=pk, author=request.user)
     post.delete()
     messages.success(request, 'Article supprimé.')
     return redirect('website:client_profile')
-
 
 # ==================== PANIER (stocké en session) ====================
 
@@ -331,49 +336,78 @@ def update_cart(request, product_id):
 @login_required
 def payment(request):
     """Page de paiement"""
-    cart = request.session.get('cart', {})
+    # Récupérer le panier depuis la session ou localStorage (via POST)
     cart_items = []
     total = 0
     
-    for product_id, quantity in cart.items():
-        try:
-            product = Product.objects.get(pk=product_id)
-            item_total = product.price * quantity
-            cart_items.append({
-                'product': product,
-                'quantity': quantity,
-                'total': item_total,
-            })
-            total += item_total
-        except Product.DoesNotExist:
-            pass
-    
     if request.method == 'POST':
-        # Créer la commande
-        order = Order.objects.create(
-            buyer=request.user,
-            total_amount=total,
-            delivery_address=request.POST.get('address', ''),
-            delivery_phone=request.POST.get('phone', request.user.phone),
-            payment_method=request.POST.get('payment_method', 'orange_money'),
-        )
-        
-        # Créer les items de la commande
-        for item in cart_items:
-            OrderItem.objects.create(
-                order=order,
-                product=item['product'],
-                quantity=item['quantity'],
+        # Traitement du paiement
+        try:
+            # Récupérer les articles du panier depuis le formulaire
+            cart_data = []
+            for key, value in request.POST.items():
+                if key.startswith('cart_items'):
+                    try:
+                        item = json.loads(value)
+                        cart_data.append({
+                            'product_id': item.get('id'),
+                            'quantity': item.get('quantity', 1),
+                        })
+                    except json.JSONDecodeError:
+                        continue
+            
+            if not cart_data:
+                messages.error(request, "Votre panier est vide")
+                return redirect('website:cart')
+            
+            # Construire l'adresse de livraison
+            delivery_address = f"{request.POST.get('shipping_first_name', '')} {request.POST.get('shipping_last_name', '')}\n"
+            delivery_address += f"{request.POST.get('street_address', '')}\n"
+            delivery_address += f"{request.POST.get('postal_code', '')} {request.POST.get('city', '')}\n"
+            delivery_address += f"{request.POST.get('country', 'CI')}"
+            
+            delivery_phone = request.POST.get('phone', request.user.phone)
+            payment_method = request.POST.get('payment_method', 'delivery')
+            
+            # Créer la commande via le service
+            order = PaymentService.create_order_from_cart(
+                user=request.user,
+                cart_items=cart_data,
+                delivery_address=delivery_address,
+                delivery_phone=delivery_phone,
+                payment_method=payment_method,
             )
-        
-        # Vider le panier
-        request.session['cart'] = {}
-        
-        return redirect('website:confirmation') # <-- Correction ici
+            
+            # Si paiement à la livraison, pas besoin de traiter le paiement maintenant
+            if payment_method == 'delivery':
+                messages.success(request, "Commande créée avec succès ! Vous paierez à la livraison.")
+            else:
+                # Traiter le paiement
+                phone_number = request.POST.get('delivery_phone', request.user.phone)
+                result = PaymentService.process_payment(
+                    order=order,
+                    payment_method=payment_method,
+                    phone_number=phone_number,
+                )
+                messages.success(request, f"Paiement effectué ! Transaction: {result['transaction_id']}")
+            
+            # Définir un cookie pour vider le panier côté client
+            response = redirect('website:confirmation')
+            response.set_cookie('clear_cart', 'true', max_age=60)
+            response.set_cookie('last_order_id', str(order.id), max_age=300)
+            return response
+            
+        except ValueError as e:
+            messages.error(request, str(e))
+            return redirect('website:cart')
+        except Exception as e:
+            logger.error(f"Erreur lors du paiement: {e}")
+            messages.error(request, "Une erreur est survenue lors du traitement de votre commande.")
+            return redirect('website:payment')
     
+    # GET: Afficher la page de paiement
     context = {
-        'cart_items': cart_items,
-        'total': total,
+        'user': request.user,
     }
     return render(request, 'website/payment.html', context)
 
@@ -381,13 +415,30 @@ def payment(request):
 @login_required
 def confirmation(request):
     """Page de confirmation de commande"""
-    # Récupérer la dernière commande de l'utilisateur
-    last_order = Order.objects.filter(buyer=request.user).order_by('-created_at').first()
+    # Récupérer la dernière commande depuis le cookie
+    order_id = request.COOKIES.get('last_order_id')
+    
+    if order_id:
+        try:
+            order = Order.objects.get(id=order_id, buyer=request.user)
+        except Order.DoesNotExist:
+            order = Order.objects.filter(buyer=request.user).order_by('-created_at').first()
+    else:
+        order = Order.objects.filter(buyer=request.user).order_by('-created_at').first()
+    
+    if not order:
+        messages.warning(request, "Aucune commande trouvée")
+        return redirect('website:home')
     
     context = {
-        'order': last_order,
+        'order': order,
+        'order_items': order.items.all(),
     }
-    return render(request, 'website/confirmation.html', context)
+    
+    response = render(request, 'website/confirmation.html', context)
+    # Supprimer le cookie
+    response.delete_cookie('last_order_id')
+    return response
 
 
 @login_required
@@ -622,3 +673,35 @@ def artisan_application(request):
     
     # Non-AJAX request
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+
+@require_POST
+def sync_cart(request):
+    """Synchroniser le panier localStorage avec la session Django"""
+    try:
+        data = json.loads(request.body)
+        cart_items = data.get('cart', [])
+        
+        # Convertir en format session Django
+        session_cart = {}
+        for item in cart_items:
+            product_id = str(item.get('id'))
+            session_cart[product_id] = {
+                'quantity': item.get('quantity', 1),
+                'price': item.get('price', 0),
+                'name': item.get('name', ''),
+                'image': item.get('image', ''),
+                'stock': item.get('stock', 999),
+                'options': item.get('options', {})
+            }
+        
+        request.session['cart'] = session_cart
+        request.session.modified = True
+        
+        return JsonResponse({'success': True, 'items_count': len(session_cart)})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)

@@ -153,10 +153,10 @@
                 <div class="order-items">
                     {% for item in items %}
                     <div class="order-item">
-                        {% if item.product and item.product.media.exists %}
-                        <img src="{{ item.product.media.first.file.url }}" alt="{{ item.product_name }}">
+                        {% if item.product and item.product.images.exists %}
+                        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product_name }}">
                         {% else %}
-                        <img src="{% static 'images/placeholder.jpg' %}" alt="{{ item.product_name }}">
+                        <img src="{% static 'img/placeholder.jpg' %}" alt="{{ item.product_name }}">
                         {% endif %}
                         <div class="item-details">
                             <h4>{{ item.product_name }}</h4>

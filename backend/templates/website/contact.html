@@ -102,6 +102,7 @@
                             <label for="subject">Sujet</label>
                             <select id="subject" name="subject" required>
                                 <option value="">Sélectionnez un sujet</option>
+                                <option value="Devis">Devis</option>
                                 {% for value, label in subject_choices %}
                                 <option value="{{ value }}">{{ label }}</option>
                                 {% endfor %}

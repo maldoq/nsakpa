@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from orders.views import payment, process_payment, confirmation, check_stock
 
 # URLs pour les artisans (namespace: artisans)
 artisans_patterns = [
@@ -8,13 +9,12 @@ artisans_patterns = [
 ]
 
 # URLs pour le blog (namespace: blog)
-# Blog patterns - CORRIGÉ (slug pour post_detail, numeric routes avant le slug)
 blog_patterns = [
     path('', views.post_list, name='post_list'),
     path('create/', views.create_article, name='create_article'),
     path('<int:pk>/update/', views.update_article, name='update_article'),
     path('<int:pk>/delete/', views.delete_article, name='delete_article'),
-    path('<slug:slug>/', views.post_detail, name='post_detail'),  # <- changed to slug and moved last
+    path('<slug:slug>/', views.post_detail, name='post_detail'),
 ]
 
 # URLs principales du website
@@ -31,10 +31,15 @@ urlpatterns = [
     path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
     path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
+    path('cart/sync/', views.sync_cart, name='sync_cart'),  # NOUVELLE LIGNE
     
-    # Commandes
-    path('payment/', views.payment, name='payment'),
-    path('confirmation/', views.confirmation, name='confirmation'),
+    # Paiement (importé depuis orders.views)
+    path('payment/', payment, name='payment'),
+    path('payment/process/', process_payment, name='process_payment'),
+    path('confirmation/', confirmation, name='confirmation'),
+    path('check-stock/', check_stock, name='check_stock'),
+    
+    # Commandes client
     path('order/<int:pk>/', views.client_order_detail, name='client_order_detail'),
     path('order/<int:pk>/status/', views.change_status, name='change_status'),
     

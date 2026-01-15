@@ -111,9 +111,8 @@
                             <label for="gender">Genre</label>
                             <select id="gender" name="gender">
                                 <option value="">Non spécifié</option>
-                                {% for key, value in user.GENDER_CHOICES %}
-                                <option value="{{ key }}" {% if user.gender == key %}selected{% endif %}>{{ value }}</option>
-                                {% endfor %}
+                                <option value="Homme">Homme</option>
+                                <option value="Femme">Femme</option>
                             </select>
                         </div>
                         <div class="form-group">

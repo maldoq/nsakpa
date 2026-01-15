@@ -6,9 +6,9 @@ from django.conf.urls.static import static
 # Importez toutes les vues nécessaires ici
 from website.views import (
     artisans_list, artisan_detail, 
-    post_list, post_detail, create_article, update_article, delete_article
+    post_list, post_detail, create_article, update_article, delete_article,
+    artisan_application  # Déplacé ici depuis orders.views
 )
-from orders.views import artisan_application
 
 # Artisans patterns
 artisans_patterns = [
@@ -24,9 +24,16 @@ blog_patterns = [
     path('<int:pk>/update/', update_article, name='update_article'),
     path('<int:pk>/delete/', delete_article, name='delete_article'),
     
-    # ICI : On met bien <slug:slug> au lieu de <int:pk> pour le détail
     path('<slug:slug>/', post_detail, name='post_detail'),
 ]
+
+# === API REST (pour Flutter) ===
+from rest_framework.routers import DefaultRouter
+from orders.views import OrderViewSet, PaymentMethodViewSet
+
+router = DefaultRouter()
+router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'payment-methods', PaymentMethodViewSet, basename='payment-method')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -49,9 +56,12 @@ urlpatterns = [
     
     # === DASHBOARD ARTISAN ===
     path('dashboard/', include('dashboard.urls', namespace='dashboard')),
+
+    # === API REST (pour Flutter) ===
+    path('api/', include(router.urls)),
 ]
 
-# Serve media AND static files during development
+# AJOUTEZ CE BLOC À LA FIN DU FICHIER
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

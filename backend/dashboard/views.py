@@ -11,13 +11,11 @@ from users.models import User
 
 
 def artisan_required(view_func):
-    """Décorateur pour vérifier que l'utilisateur est un artisan"""
+    """Décorateur pour vérifier que l'utilisateur est un artisan ou admin"""
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect('login')
         if request.user.role not in ['artisan', 'admin']:
-            messages.error(request, "Accès réservé aux artisans")
-            return redirect('home')
+            messages.error(request, "Accès réservé aux artisans.")
+            return redirect('website:home')
         return view_func(request, *args, **kwargs)
     return wrapper
 
@@ -47,32 +45,28 @@ def dashboard_home(request):
         'total_orders': current_orders.count(),
         'total_revenue': current_orders.aggregate(total=Sum('total_amount'))['total'] or 0,
         'new_customers': User.objects.filter(role='buyer', date_joined__gte=last_month).count(),
-        'out_of_stock': products.filter(stock=0).count(),
+        'total_products': products.count(),
     }
     
-    # Calcul des pourcentages
-    prev_orders_count = previous_orders.count() or 1
-    prev_revenue = previous_orders.aggregate(total=Sum('total_amount'))['total'] or 1
+    # Calcul des variations
+    prev_orders_count = previous_orders.count()
+    prev_revenue = previous_orders.aggregate(total=Sum('total_amount'))['total'] or 0
     
-    orders_percentage = ((stats['total_orders'] - prev_orders_count) / prev_orders_count) * 100
-    revenue_percentage = ((stats['total_revenue'] - prev_revenue) / prev_revenue) * 100
-    customers_percentage = 0  # À calculer
-    stock_percentage = 0
+    stats['orders_change'] = ((stats['total_orders'] - prev_orders_count) / max(prev_orders_count, 1)) * 100
+    stats['revenue_change'] = ((stats['total_revenue'] - prev_revenue) / max(prev_revenue, 1)) * 100
     
     # Dernières commandes
     recent_orders = orders.order_by('-created_at')[:5]
     
-    # Produits populaires
-    popular_products = products.order_by('-average_rating')[:5]
+    # Produits les plus vendus
+    top_products = products.annotate(
+        sales_count=Count('order_items')
+    ).order_by('-sales_count')[:5]
     
     context = {
         'stats': stats,
-        'orders_percentage': orders_percentage,
-        'revenue_percentage': revenue_percentage,
-        'customers_percentage': customers_percentage,
-        'stock_percentage': stock_percentage,
         'recent_orders': recent_orders,
-        'popular_products': popular_products,
+        'top_products': top_products,
     }
     return render(request, 'dashboard/dashboard.html', context)
 
@@ -153,11 +147,16 @@ def customers_list(request):
     if request.user.role == 'admin':
         customers = User.objects.filter(role='buyer')
     else:
-        # Clients qui ont commandé chez cet artisan
-        customer_ids = Order.objects.filter(
-            items__product__artisan=request.user
-        ).values_list('buyer_id', flat=True).distinct()
-        customers = User.objects.filter(id__in=customer_ids)
+        # Clients qui ont acheté des produits de cet artisan
+        customers = User.objects.filter(
+            orders__items__product__artisan=request.user
+        ).distinct()
+    
+    # Annoter avec les statistiques
+    customers = customers.annotate(
+        total_orders=Count('orders'),
+        total_spent=Sum('orders__total_amount')
+    )
     
     # Pagination
     paginator = Paginator(customers, 10)
@@ -212,24 +211,6 @@ def notification_detail(request, pk):
 @artisan_required
 def profile(request):
     """Profil de l'artisan"""
-    if request.method == 'POST':
-        # Mise à jour du profil
-        user = request.user
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
-        user.phone = request.POST.get('phone', user.phone)
-        user.location = request.POST.get('location', user.location)
-        user.bio = request.POST.get('bio', user.bio)
-        user.stand_name = request.POST.get('stand_name', user.stand_name)
-        user.stand_location = request.POST.get('stand_location', user.stand_location)
-        
-        if 'profile_image' in request.FILES:
-            user.profile_image = request.FILES['profile_image']
-        
-        user.save()
-        messages.success(request, 'Profil mis à jour avec succès!')
-        return redirect('dashboard:profile')
-    
     context = {
         'user': request.user,
     }
@@ -240,7 +221,5 @@ def profile(request):
 @artisan_required
 def settings_view(request):
     """Paramètres du compte"""
-    context = {
-        'user': request.user,
-    }
+    context = {}
     return render(request, 'dashboard/settings.html', context)

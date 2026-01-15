@@ -101,10 +101,10 @@
                     data-date="{{ product.created_at|date:'Y-m-d' }}">
                     <a href="{% url 'website:product_detail' product.id %}" class="product-link">
                         <div class="product-image">
-                            {% if product.media.exists %}
-                            <img src="{{ product.media.first.file.url }}" alt="{{ product.name }}" loading="lazy">
+                            {% if product.images.exists %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
                             {% else %}
-                            <img src="{% static 'images/placeholder.jpg' %}" alt="Image non disponible" loading="lazy">
+                            <img src="{% static 'img/placeholder.jpg' %}" alt="Image non disponible" loading="lazy">
                             {% endif %}
 
                             {% if product.featured %}
@@ -150,7 +150,7 @@
                 {{ product.id }}, 
                 '{{ product.name|escapejs }}', 
                 {{ product.price }}, 
-                '{% if product.media.exists %}{{ product.media.first.file.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}',
+                '{% if product.images.exists %}{{ product.images.first.image.url }}{% else %}{% static 'img/placeholder.jpg' %}{% endif %}',
                 {{ product.stock }}
             )" class="add-to-cart-btn">
                         <i class="fas fa-shopping-cart"></i>

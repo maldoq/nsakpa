@@ -11,7 +11,6 @@
     <!-- Fil d'Ariane -->
     <nav class="breadcrumb">
         <div class="container">
-            <!-- AJOUT DE 'website:' -->
             <a href="{% url 'website:home' %}">Accueil</a>
             <span class="separator">/</span>
             <a href="{% url 'website:cart' %}">Panier</a>
@@ -27,230 +26,280 @@
             <span>Paiement 100% sécurisé - Vos données sont chiffrées et protégées</span>
         </div>
 
-        <!-- Messages flash -->
-        {% if messages %}
-        <div class="messages-container">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                <i class="fas fa-info-circle"></i>
-                {{ message }}
-                <button type="button" class="close-alert">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <div class="payment-content">
+        <div class="payment-grid">
             <!-- Formulaire de paiement -->
-            <section class="payment-form-section">
-                <form method="POST" action="{% url 'process_payment' %}" id="payment-form">
+            <div class="payment-form-section">
+                <form id="payment-form" class="payment-form">
                     {% csrf_token %}
-                    <meta name="csrf-token" content="{{ csrf_token }}">
                     
-                    <h1>Finaliser votre commande</h1>
-
-                    <!-- Étapes -->
-                    <div class="payment-steps">
-                        <div class="step completed">
-                            <div class="step-number">1</div>
-                            <span>Panier</span>
+                    <!-- Informations de livraison -->
+                    <section class="form-section">
+                        <h2><i class="fas fa-truck"></i> Informations de livraison</h2>
+                        
+                        {% if user_addresses %}
+                        <div class="saved-addresses">
+                            <label>Utiliser une adresse enregistrée :</label>
+                            <select id="saved-address" name="shipping_address_id" class="form-control">
+                                <option value="">-- Nouvelle adresse --</option>
+                                {% for address in user_addresses %}
+                                <option value="{{ address.id }}" 
+                                        data-street="{{ address.street_address }}"
+                                        data-city="{{ address.city }}"
+                                        data-postal="{{ address.postal_code }}"
+                                        data-country="{{ address.country }}">
+                                    {{ address.address_type }} - {{ address.street_address }}, {{ address.city }}
+                                </option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <div class="step active">
-                            <div class="step-number">2</div>
-                            <span>Paiement</span>
-                        </div>
-                        <div class="step">
-                            <div class="step-number">3</div>
-                            <span>Confirmation</span>
-                        </div>
-                    </div>
-
-                    <!-- Champs cachés pour transmettre les totaux et le panier -->
-                    <input type="hidden" name="subtotal" id="subtotal-input">
-                    <input type="hidden" name="total_amount" id="total-amount-input">
-                    <input type="hidden" name="tax_amount" id="tax-amount-input">
-                    <input type="hidden" name="shipping_cost" id="shipping-cost-input">
-                    <div id="cart-items-container"></div>
-
-                    <!-- Adresse de livraison -->
-                    <div class="address-section">
-                        <h2>Adresse de livraison</h2>
-                        <div class="form-grid">
+                        {% endif %}
+                        
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="shipping_first_name">Prénom *</label>
-                                <input type="text" id="shipping_first_name" name="shipping_first_name" required>
+                                <input type="text" id="shipping_first_name" name="shipping_first_name" 
+                                       value="{{ user.first_name }}" required>
                             </div>
                             <div class="form-group">
                                 <label for="shipping_last_name">Nom *</label>
-                                <input type="text" id="shipping_last_name" name="shipping_last_name" required>
+                                <input type="text" id="shipping_last_name" name="shipping_last_name" 
+                                       value="{{ user.last_name }}" required>
                             </div>
-                            <div class="form-group full-width">
-                                <label for="shipping_street">Adresse *</label>
-                                <input type="text" id="shipping_street" name="street_address" required>
-                            </div>
-                            <div class="form-group full-width">
-                                <label for="shipping_apartment">Complément d'adresse</label>
-                                <input type="text" id="shipping_apartment" name="apartment">
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="shipping_email">Email *</label>
+                                <input type="email" id="shipping_email" name="shipping_email" 
+                                       value="{{ user.email }}" required>
                             </div>
                             <div class="form-group">
-                                <label for="shipping_postal_code">Code postal *</label>
-                                <input type="text" id="shipping_postal_code" name="postal_code" required>
+                                <label for="shipping_phone">Téléphone *</label>
+                                <input type="tel" id="shipping_phone" name="shipping_phone" 
+                                       value="{{ user.phone|default:'' }}" required>
                             </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="shipping_address">Adresse *</label>
+                            <input type="text" id="shipping_address" name="shipping_address" 
+                                   placeholder="Numéro et nom de rue" required>
+                        </div>
+                        
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="shipping_city">Ville *</label>
-                                <input type="text" id="shipping_city" name="city" required>
+                                <input type="text" id="shipping_city" name="shipping_city" required>
                             </div>
-                            <div class="form-group full-width">
-                                <label for="shipping_country">Pays *</label>
-                                <select id="shipping_country" name="country" required>
-                                    <option value="">Sélectionnez un pays</option>
-                                    <option value="CI">Côte d'Ivoire</option>
-                                    <!-- <option value="BF">Burkina Faso</option>
-                                    <option value="GH">Ghana</option> -->
-                                </select>
+                            <div class="form-group">
+                                <label for="shipping_postal_code">Code postal</label>
+                                <input type="text" id="shipping_postal_code" name="shipping_postal_code">
                             </div>
                         </div>
-                    </div>
+                        
+                        <div class="form-group">
+                            <label for="shipping_country">Pays *</label>
+                            <select id="shipping_country" name="shipping_country" required>
+                                <option value="Côte d'Ivoire" selected>Côte d'Ivoire</option>
+                                <option value="Sénégal">Sénégal</option>
+                                <option value="Mali">Mali</option>
+                                <option value="Burkina Faso">Burkina Faso</option>
+                                <option value="Ghana">Ghana</option>
+                                <option value="Bénin">Bénin</option>
+                                <option value="Togo">Togo</option>
+                                <option value="Niger">Niger</option>
+                                <option value="Guinée">Guinée</option>
+                                <option value="France">France</option>
+                            </select>
+                        </div>
+                    </section>
 
                     <!-- Mode de paiement -->
-                    <div class="payment-methods">
-                        <h2>Mode de paiement</h2>
-                        <div class="payment-options">
-                            <!-- Option carte bancaire -->
-                            <label class="payment-option">
-                                <input type="radio" name="payment_method" value="card" checked>
-                                <div class="option-content">
-                                    <div class="option-icon">
+                    <section class="form-section">
+                        <h2><i class="fas fa-credit-card"></i> Mode de paiement</h2>
+                        
+                        <div class="payment-methods">
+                            <!-- Mobile Money -->
+                            <div class="payment-method">
+                                <input type="radio" id="orange_money" name="payment_method" value="orange_money">
+                                <label for="orange_money" class="payment-option">
+                                    <div class="payment-icon orange">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <div class="payment-info">
+                                        <span class="payment-name">Orange Money</span>
+                                        <span class="payment-desc">Paiement mobile sécurisé</span>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="payment-method">
+                                <input type="radio" id="mtn_momo" name="payment_method" value="mtn_momo">
+                                <label for="mtn_momo" class="payment-option">
+                                    <div class="payment-icon mtn">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </div>
+                                    <div class="payment-info">
+                                        <span class="payment-name">MTN Mobile Money</span>
+                                        <span class="payment-desc">Paiement mobile sécurisé</span>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <!-- Carte bancaire -->
+                            <div class="payment-method">
+                                <input type="radio" id="card" name="payment_method" value="card" checked>
+                                <label for="card" class="payment-option">
+                                    <div class="payment-icon card">
                                         <i class="fas fa-credit-card"></i>
                                     </div>
-                                    <div class="option-details">
-                                        <span class="option-title">Carte bancaire</span>
-                                        <span class="option-description">Paiement sécurisé par carte</span>
+                                    <div class="payment-info">
+                                        <span class="payment-name">Carte bancaire</span>
+                                        <span class="payment-desc">Visa, Mastercard</span>
                                     </div>
-                                    <div class="card-icons">
-                                        <i class="fab fa-cc-visa"></i>
-                                        <i class="fab fa-cc-mastercard"></i>
-                                        <i class="fab fa-cc-amex"></i>
+                                </label>
+                            </div>
+                            
+                            <!-- Paiement à la livraison -->
+                            <div class="payment-method">
+                                <input type="radio" id="cash_on_delivery" name="payment_method" value="cash_on_delivery">
+                                <label for="cash_on_delivery" class="payment-option">
+                                    <div class="payment-icon cash">
+                                        <i class="fas fa-money-bill-wave"></i>
                                     </div>
-                                </div>
-                            </label>
-
-                            <!-- Option paiement à la livraison -->
-                            <label class="payment-option">
-                                <input type="radio" name="payment_method" value="delivery">
-                                <div class="option-content">
-                                    <div class="option-icon">
-                                        <i class="fas fa-truck"></i>
+                                    <div class="payment-info">
+                                        <span class="payment-name">Paiement à la livraison</span>
+                                        <span class="payment-desc">Payez en espèces à réception</span>
                                     </div>
-                                    <div class="option-details">
-                                        <span class="option-title">Paiement à la livraison</span>
-                                        <span class="option-description">Payez en espèces à la réception</span>
-                                    </div>
-                                </div>
-                            </label>
+                                </label>
+                            </div>
                         </div>
 
-                        <!-- Formulaire carte bancaire -->
-                        <div id="card-payment-form" class="payment-details">
-                            <div class="form-grid">
-                                {% comment %} <h3>Cette fonctinnaliter n'est pas disponible pour le moment</h3> {% endcomment %}
-                                 <div class="form-group full-width">
-                                    <label for="card_holder">Titulaire de la carte *</label>
-                                    <input type="text" id="card_holder" name="card_holder" placeholder="Nom tel qu'il apparaît sur la carte" required>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="card_number">Numéro de carte *</label>
-                                    <div class="card-input-wrapper">
-                                        <input type="text" id="card_number" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19" required>
-                                        <i class="card-type-icon fab fa-cc-visa"></i>
-                                    </div>
-                                </div>
+                        <!-- Formulaire Mobile Money -->
+                        <div id="mobile-money-form" class="payment-details" style="display: none;">
+                            <div class="form-group">
+                                <label for="mobile_phone">Numéro de téléphone Mobile Money *</label>
+                                <input type="tel" id="mobile_phone" name="mobile_phone" 
+                                       placeholder="Ex: 07 00 00 00 00">
+                                <small class="form-hint">Vous recevrez une demande de paiement sur ce numéro</small>
+                            </div>
+                        </div>
+
+                        <!-- Formulaire Carte bancaire -->
+                        <div id="card-form" class="payment-details">
+                            <div class="form-group">
+                                <label for="card_name">Nom sur la carte *</label>
+                                <input type="text" id="card_name" name="card_name" placeholder="JEAN DUPONT">
+                            </div>
+                            <div class="form-group">
+                                <label for="card_number">Numéro de carte *</label>
+                                <input type="text" id="card_number" name="card_number" 
+                                       placeholder="1234 5678 9012 3456" maxlength="19">
+                            </div>
+                            <div class="form-row">
                                 <div class="form-group">
                                     <label for="card_expiry">Date d'expiration *</label>
-                                    <div class="expiry-inputs">
-                                        <input type="text" id="card_expiry_month" name="card_expiry_month" placeholder="MM" maxlength="2" required>
-                                        <span>/</span>
-                                        <input type="text" id="card_expiry_year" name="card_expiry_year" placeholder="AA" maxlength="2" required>
-                                    </div>
+                                    <input type="text" id="card_expiry" name="card_expiry" 
+                                           placeholder="MM/AA" maxlength="5">
                                 </div>
                                 <div class="form-group">
-                                    <label for="card_cvv">Code de sécurité *</label>
-                                    <div class="cvv-input-wrapper">
-                                        <input type="text" id="card_cvv" name="card_cvv" placeholder="123" maxlength="3" required>
-                                        <i class="fas fa-question-circle tooltip-trigger" data-tooltip="Le code à 3 chiffres au dos de votre carte"></i>
-                                    </div>
-                                </div> 
+                                    <label for="card_cvv">CVV *</label>
+                                    <input type="text" id="card_cvv" name="card_cvv" 
+                                           placeholder="123" maxlength="4">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Formulaire paiement à la livraison -->
-                        <div id="delivery-payment-form" class="payment-details" style="display: none;">
-                            <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="delivery_phone">Téléphone *</label>
-                                    <input type="tel" id="delivery_phone" name="phone" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="delivery_email">Email *</label>
-                                    <input type="email" id="delivery_email" name="email" required>
-                                </div>
-                                <div class="form-group full-width">
-                                    <label for="delivery_instructions">Instructions de livraison</label>
-                                    <textarea id="delivery_instructions" name="delivery_instructions" rows="3" placeholder="Instructions spéciales pour le livreur"></textarea>
-                                </div>
+                        <!-- Message paiement à la livraison -->
+                        <div id="cash-delivery-info" class="payment-details" style="display: none;">
+                            <div class="info-box">
+                                <i class="fas fa-info-circle"></i>
+                                <p>Vous paierez en espèces à la réception de votre commande. 
+                                   Préparez le montant exact si possible.</p>
                             </div>
                         </div>
+                    </section>
+
+                    <!-- Conditions générales -->
+                    <div class="terms-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="accept_terms" name="accept_terms" required>
+                            <span>J'accepte les <a href="#" target="_blank">conditions générales de vente</a> 
+                                  et la <a href="#" target="_blank">politique de confidentialité</a></span>
+                        </label>
                     </div>
-                    <!-- Bouton de soumission -->
-                    <div class="submit-container">
-                        <button type="submit" class="pay-button">
-                            <i class="fas fa-lock"></i>
-                            <span>Valider la commande</span>
-                        </button>
-                    </div>
+
+                    <!-- Bouton de paiement -->
+                    <button type="submit" class="btn-pay" id="submit-payment">
+                        <i class="fas fa-lock"></i>
+                        <span>Payer {{ total }} F CFA</span>
+                    </button>
                 </form>
-            </section>
+            </div>
 
-            <!-- Résumé de la commande -->
+            <!-- Récapitulatif de commande -->
             <aside class="order-summary">
-                <div class="summary-content">
-                    <h2>Résumé de la commande</h2>
-                    <div class="order-items">
-                        <!-- Les articles seront injectés via JavaScript -->
+                <h2>Récapitulatif</h2>
+                
+                <div class="cart-items">
+                    {% for item in cart_items %}
+                    <div class="cart-item" data-product-id="{{ item.product.id }}">
+                        <div class="item-image">
+                            {% if item.product.images.exists %}
+                            <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                            <img src="{% static 'img/website/nsapka_logo.png' %}" alt="{{ item.product.name }}">
+                            {% endif %}
+                        </div>
+                        <div class="item-details">
+                            <h4>{{ item.product.name }}</h4>
+                            <p class="item-quantity">Quantité : {{ item.quantity }}</p>
+                            {% if item.product.stock < 5 %}
+                            <p class="stock-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Plus que {{ item.product.stock }} en stock
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="item-price">{{ item.total }} F</div>
                     </div>
-                    <div class="price-details">
-                        <div class="price-row">
-                            <span>Sous-total</span>
-                            <span class="subtotal">0.00 F CFA</span>
-                        </div>
-                        <div class="price-row">
-                            <span>TVA (20%)</span>
-                            <span class="tax">0.00 F CFA</span>
-                        </div>
-                        <div class="price-row">
-                            <span>Livraison</span>
-                            <span class="shipping">Gratuite</span>
-                        </div>
-                        <div class="price-row total">
-                            <span>Total</span>
-                            <span class="total-amount">0.00 F CFA</span>
-                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary-totals">
+                    <div class="summary-row">
+                        <span>Sous-total</span>
+                        <span>{{ subtotal }} F CFA</span>
                     </div>
-                    <div class="payment-guarantees">
-                        <div class="guarantee">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Paiement sécurisé</span>
-                        </div>
-                        <div class="guarantee">
-                            <i class="fas fa-undo"></i>
-                            <span>Retour sous 30 jours</span>
-                        </div>
-                        <div class="guarantee">
-                            <i class="fas fa-lock"></i>
-                            <span>Données protégées</span>
-                        </div>
+                    <div class="summary-row">
+                        <span>Livraison</span>
+                        <span>
+                            {% if shipping_cost == 0 %}
+                            <span class="free-shipping">Gratuite</span>
+                            {% else %}
+                            {{ shipping_cost }} F CFA
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span>{{ total }} F CFA</span>
+                    </div>
+                </div>
+
+                <!-- Avantages -->
+                <div class="summary-benefits">
+                    <div class="benefit">
+                        <i class="fas fa-shipping-fast"></i>
+                        <span>Livraison gratuite dès 50 000 F CFA</span>
+                    </div>
+                    <div class="benefit">
+                        <i class="fas fa-undo"></i>
+                        <span>Retours gratuits sous 30 jours</span>
+                    </div>
+                    <div class="benefit">
+                        <i class="fas fa-lock"></i>
+                        <span>Paiement sécurisé</span>
                     </div>
                 </div>
             </aside>
@@ -258,6 +307,31 @@
     </div>
 </main>
 
-<!-- Ajout du paramètre de version pour forcer le rechargement du JS -->
+<!-- Modal de chargement -->
+<div id="loading-modal" class="modal-overlay" style="display: none;">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p>Traitement de votre paiement en cours...</p>
+        <small>Ne fermez pas cette page</small>
+    </div>
+</div>
+
+<!-- Modal d'erreur de stock -->
+<div id="stock-error-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content error-modal">
+        <div class="modal-header">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Stock insuffisant</h3>
+        </div>
+        <div class="modal-body" id="stock-error-details">
+            <!-- Contenu dynamique -->
+        </div>
+        <div class="modal-footer">
+            <a href="{% url 'website:cart' %}" class="btn-secondary">Modifier le panier</a>
+            <button class="btn-primary" onclick="closeStockErrorModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+
 <script src="{% static 'js/website/payment.js' %}?v={% now 'U' %}"></script>
 {% endblock %}

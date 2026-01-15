@@ -90,8 +90,8 @@
         {% for product in products %}
         <div class="product-card">
             <div class="product-image">
-                {% if product.media.first %}
-                <img src="{{ product.media.first.file.url }}" alt="{{ product.name }}">
+                {% if product.images.first %}
+                <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
                 {% endif %}
                 {% if product.stock <= 0 %} <span class="product-badge badge-out-of-stock">Rupture de stock</span>
                     {% elif product.stock <= 10 %} <span class="product-badge badge-low-stock">Stock faible</span>
@@ -109,7 +109,7 @@
         data-barcode="{{ product.barcode|default:'' }}"
         data-sku="{{ product.sku|default:'' }}"
         data-weight="{{ product.weight|default:'' }}"
-        data-media="{% for media in product.media.all %}{{ media.id }}:{{ media.file.url }}{% if not forloop.last %},{% endif %}{% endfor %}">
+        data-media="{% for img in product.images.all %}{{ img.id }}:{{ img.image.url }}{% if not forloop.last %},{% endif %}{% endfor %}">
     <i class="fas fa-edit"></i>
 </button>
                             <button class="action-btn delete-product" data-id="{{ product.id }}">
@@ -204,8 +204,8 @@
                                 </div>
                             </div>
                             <div id="imagePreview" class="image-preview">
-                                {% if product and product.media.all %}
-                                {% for media in product.media.all %}
+                                {% if product and product.images.all %}
+                                {% for img in product.images.all %}
                                 <div class="preview-item">
                                     <img src="{{ media.file.url }}" alt="Preview">
                                     <button type="button" class="remove-image" data-media-id="{{ media.id }}">×</button>

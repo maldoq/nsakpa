@@ -25,17 +25,17 @@
             <!-- Galerie d'images -->
             <div class="product-gallery">
                 <div class="main-image">
-                    {% if product.media.all %}
-                    <img src="{{ product.media.first.file.url }}" alt="{{ product.name }}">
+                    {% if product.images.all %}
+                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
                     {% else %}
-                    <img src="{% static 'images/placeholder.jpg' %}" alt="{{ product.name }}">
+                    <img src="{% static 'img/placeholder.jpg' %}" alt="{{ product.name }}">
                     {% endif %}
                 </div>
-                {% if product.media.all|length > 1 %}
+                {% if product.images.all|length > 1 %}
                 <div class="thumbnail-list">
-                    {% for media in product.media.all %}
+                    {% for img_obj in product.images.all %}
                     <div class="thumbnail {% if forloop.first %}active{% endif %}">
-                        <img src="{{ media.file.url }}" alt="{{ product.name }} - Vue {{ forloop.counter }}">
+                        <img src="{{ img_obj.image.url }}" alt="{{ product.name }} - Vue {{ forloop.counter }}">
                     </div>
                     {% endfor %}
                 </div>
@@ -114,7 +114,7 @@
                         {{ product.id }}, 
                         '{{ product.name|escapejs }}', 
                         {{ product.price }}, 
-                        '{% if product.media.exists %}{{ product.media.first.file.url }}{% else %}{% static 'images/placeholder.jpg' %}{% endif %}',
+                        '{% if product.images.exists %}{{ product.images.first.image.url }}{% else %}{% static 'img/placeholder.jpg' %}{% endif %}',
                         {{ product.stock }}
                     )" class="add-to-cart-btn">
                         <i class="fas fa-shopping-cart"></i>
@@ -209,12 +209,12 @@
             <div class="products-grid">
                 {% for similar in similar_products %}
                 <div class="product-card">
-                    <a href="{% url 'product_detail' similar.id %}" class="product-link">
+                    <a href="{% url 'website:product_detail' similar.id %}" class="product-link">
                         <div class="product-image">
-                            {% if similar.media.exists %}
-                            <img src="{{ similar.media.first.file.url }}" alt="{{ similar.name }}">
+                            {% if similar.images.exists %}
+                            <img src="{{ similar.images.first.image.url }}" alt="{{ similar.name }}">
                             {% else %}
-                            <img src="{% static 'images/placeholder.jpg' %}" alt="{{ similar.name }}">
+                            <img src="{% static 'img/placeholder.jpg' %}" alt="{{ similar.name }}">
                             {% endif %}
                         </div>
                         <div class="product-info">
