@@ -668,7 +668,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentOrderId = orderId;
 
         // Effectuer une requête AJAX pour obtenir les détails
-        fetch(`/orders/${orderId}/details/`)
+        fetch(`${orderId}/details/`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`Erreur HTTP ${response.status}`);

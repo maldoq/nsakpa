@@ -63,7 +63,7 @@
                     <p>Modifiez vos informations personnelles de base</p>
                 </div>
 
-                <form method="POST" action="{% url 'admin_profile' %}" enctype="multipart/form-data" class="profile-form">
+                <form method="POST" action="{% url 'dashboard:profile' %}" enctype="multipart/form-data" class="profile-form">
                     {% csrf_token %}
                     <input type="hidden" name="section" value="info">
 
@@ -145,7 +145,7 @@
                     <p>Renseignez vos informations d'entreprise et professionnelles</p>
                 </div>
 
-                <form method="POST" action="{% url 'admin_profile' %}" class="profile-form">
+                <form method="POST" action="{% url 'dashboard:profile' %}" class="profile-form">
                     {% csrf_token %}
                     <input type="hidden" name="section" value="professional">
 
@@ -235,7 +235,7 @@
                 <h3>Changer votre mot de passe</h3>
                 <button type="button" class="close-modal">&times;</button>
             </div>
-            <form method="POST" action="{% url 'admin_profile' %}" id="passwordForm">
+            <form method="POST" action="{% url 'dashboard:profile' %}" id="passwordForm">
                 {% csrf_token %}
                 <input type="hidden" name="section" value="security">
                 
@@ -311,7 +311,7 @@
                 <h3 id="addressModalTitle">Ajouter une adresse</h3>
                 <button type="button" class="close-modal">&times;</button>
             </div>
-            <form method="POST" action="{% url 'admin_address' %}" id="addressForm">
+            <form method="POST" action="#" id="addressForm">
                 {% csrf_token %}
                 <input type="hidden" name="address_id" id="addressId" value="">
                 

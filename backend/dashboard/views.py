@@ -8,6 +8,9 @@ from datetime import timedelta
 from products.models import Product
 from orders.models import Order, OrderItem
 from users.models import User
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 
 def artisan_required(view_func):
@@ -60,7 +63,7 @@ def dashboard_home(request):
     
     # Produits les plus vendus
     top_products = products.annotate(
-        sales_count=Count('order_items')
+        sales_count=Count('orderitem')
     ).order_by('-sales_count')[:5]
     
     context = {
@@ -134,8 +137,15 @@ def orders_list(request):
     page = request.GET.get('page')
     orders = paginator.get_page(page)
     
+    # Get choices for template
+    order_status_choices = Order.Status.choices
+    payment_status_choices = Order.PaymentStatus.choices
+    
     context = {
         'orders': orders,
+        'order_status_choices': order_status_choices,
+        'payment_status_choices': payment_status_choices,
+        'current_status': status,
     }
     return render(request, 'dashboard/order.html', context)
 
@@ -223,3 +233,156 @@ def settings_view(request):
     """Paramètres du compte"""
     context = {}
     return render(request, 'dashboard/settings.html', context)
+
+# ==================== ORDER MANAGEMENT API ====================
+
+@login_required
+@artisan_required
+@require_POST
+def change_order_status(request):
+    order_id = request.POST.get('order_id')
+    status = request.POST.get('status')
+    
+    order = get_object_or_404(Order, id=order_id)
+    order.status = status
+    order.save()
+    
+    return JsonResponse({'success': True, 'status_display': order.get_status_display()})
+
+@login_required
+@artisan_required
+@require_POST
+def change_payment_status(request):
+    order_id = request.POST.get('order_id')
+    status = request.POST.get('status')
+    
+    order = get_object_or_404(Order, id=order_id)
+    order.payment_status = status
+    if status == Order.PaymentStatus.COMPLETED:
+        order.is_paid = True
+        if not order.paid_at:
+            order.paid_at = timezone.now()
+    order.save()
+    
+    return JsonResponse({'success': True, 'payment_status_display': order.get_payment_status_display()})
+
+@login_required
+@artisan_required
+def get_order_details(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    
+    items_data = []
+    for item in order.items.all():
+        items_data.append({
+            'product_name': item.product_name,
+            'product_sku': item.product_sku,
+            'product_image': item.product.images.first().image.url if item.product and item.product.images.exists() else None,
+            'unit_price': str(item.price),
+            'quantity': item.quantity,
+            'total_price': str(item.total),
+        })
+    
+    # Format notes
+    notes = []
+    if order.note:
+        # Assuming notes are just text for now, but JS expects structured
+        notes.append({
+            'user': 'Système/Admin',
+            'created_at': order.updated_at.strftime("%d %b %Y %H:%M"),
+            'note': order.note
+        })
+
+    data = {
+        'success': True,
+        'order': {
+            'id': order.id,
+            'order_number': order.order_number,
+            'status': order.status,
+            'status_display': order.get_status_display(),
+            'created_at': order.created_at.strftime("%d %b %Y %H:%M"),
+            'payment_method': order.payment_method,
+            'payment_method_display': order.get_payment_method_display(),
+            'payment_status': order.payment_status,
+            'payment_status_display': order.get_payment_status_display(),
+            'tracking_number': order.tracking_number,
+            'estimated_delivery_date': order.estimated_delivery_date.strftime("%d %b %Y") if order.estimated_delivery_date else None,
+            'subtotal': str(order.subtotal),
+            'tax_amount': str(order.tax_amount),
+            'shipping_cost': str(order.shipping_cost),
+            'total_amount': str(order.total_amount),
+            'shipping_address': order.shipping_address_text,
+            'billing_address': order.shipping_address_text,
+            'customer': {
+                'name': f"{order.buyer.first_name} {order.buyer.last_name}",
+                'email': order.buyer.email,
+                'date_joined': order.buyer.date_joined.strftime("%d %b %Y"),
+                'orders_count': order.buyer.orders.count(),
+                'image': order.buyer.profile_picture.url if hasattr(order.buyer, 'profile_picture') and order.buyer.profile_picture else None,
+            },
+            'items': items_data,
+            'notes': notes,
+        }
+    }
+    return JsonResponse(data)
+
+@login_required
+@artisan_required
+@require_POST
+def update_tracking(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    tracking_number = request.POST.get('tracking_number')
+    order.tracking_number = tracking_number
+    order.save()
+    return JsonResponse({'success': True})
+
+@login_required
+@artisan_required
+@require_POST
+def add_note(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    note_text = request.POST.get('note_text')
+    
+    timestamp = timezone.now().strftime("%Y-%m-%d %H:%M")
+    new_note = f"[{timestamp}] {request.user.get_full_name() or request.user.username}: {note_text}"
+    
+    if order.note:
+        order.note += "\n" + new_note
+    else:
+        order.note = new_note
+    order.save()
+    
+    return JsonResponse({
+        'success': True, 
+        'user': request.user.get_full_name() or request.user.username,
+        'date': timestamp,
+        'note_text': note_text
+    })
+
+@login_required
+@artisan_required
+@require_POST
+def batch_update_orders(request):
+    order_ids = request.POST.get('order_ids', '').split(',')
+    status = request.POST.get('status')
+    note = request.POST.get('note')
+    
+    updated_count = 0
+    for order_id in order_ids:
+        if not order_id: continue
+        try:
+            order = Order.objects.get(id=order_id)
+            if status:
+                order.status = status
+            if note:
+                timestamp = timezone.now().strftime("%Y-%m-%d %H:%M")
+                new_note = f"[{timestamp}] {request.user.get_full_name() or request.user.username}: {note}"
+                if order.note:
+                    order.note += "\n" + new_note
+                else:
+                    order.note = new_note
+            order.save()
+            updated_count += 1
+        except Order.DoesNotExist:
+            continue
+            
+    return JsonResponse({'success': True, 'updated_count': updated_count})

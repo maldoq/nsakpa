@@ -202,7 +202,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               const SizedBox(height: 16),
               // Catégorie
               DropdownButtonFormField<String>(
-                value: _selectedCategory,
+                value: _categories.contains(_selectedCategory) ? _selectedCategory : null,
                 decoration: const InputDecoration(
                   labelText: 'Catégorie',
                   prefixIcon: Icon(Icons.category),

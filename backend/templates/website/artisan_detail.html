@@ -113,7 +113,7 @@
         </div>
         
         <div class="section-footer">
-            <a href="{% url 'products' %}?artisan={{ artisan.id }}" class="view-all-btn">
+            <a href="{% url 'website:products' %}?artisan={{ artisan.id }}" class="view-all-btn">
                 Voir toutes les créations
                 <i class="fas fa-arrow-right"></i>
             </a>
@@ -128,7 +128,7 @@
         <div class="contact-artisan">
             <h3>Contacter {{ artisan.name }}</h3>
             
-            <form class="contact-form" method="post" action="{% url 'contact_artisan' artisan.id %}">
+            <form class="contact-form" method="post" action="#">
                 {% csrf_token %}
                 <div class="form-group">
                     <label for="name">Votre nom</label>
@@ -184,7 +184,7 @@
                     <p class="artisan-description">{{ similar.description|truncatechars:120 }}</p>
                     
                     <div class="artisan-footer">
-                        <a href="{% url 'artisan_detail' similar.id %}" class="btn-view-profile">
+                        <a href="{% url 'artisans:artisan_detail' similar.id %}" class="btn-view-profile">
                             <i class="fas fa-user"></i>
                             Voir le profil
                         </a>

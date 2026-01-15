@@ -53,7 +53,7 @@
                         <span>(4.5 - 125 avis)</span>
                     </div>
                     <div class="product-category">
-                        Catégorie: <a href="{% url 'products' %}?category={{ product.category.name|lower }}">
+                        Catégorie: <a href="{% url 'website:products' %}?category={{ product.category.name|lower }}">
                             <i class="fas {{ product.category.icon }}" style="color: {{ product.category.color }}"></i>
                             {{ product.category.name }}
                         </a>

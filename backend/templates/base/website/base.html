@@ -59,6 +59,9 @@
                     </a>
                     <ul class="dropdown-menu" id="user-dropdown">
                         {% if user.is_authenticated %}
+                        {% if user.role == 'artisan' or user.role == 'admin' %}
+                        <li><a href="{% url 'dashboard:home' %}">Tableau de bord</a></li>
+                        {% endif %}
                         <li><a href="{% url 'website:client_profile' %}">Profil</a></li>
                         <li><a href="{% url 'website:logout' %}">Déconnexion</a></li>
                         {% else %}

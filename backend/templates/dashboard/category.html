@@ -36,7 +36,7 @@
     <!-- Barre d'outils -->
     <div class="toolbar">
         <div class="toolbar-left">
-            <form method="GET" action="{% url 'admin_categories' %}">
+            <form method="GET" action="{% url 'dashboard:categories' %}">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
                     <input type="text" name="search" placeholder="Rechercher une catégorie..." value="{{ request.GET.search }}">
@@ -107,7 +107,7 @@
             <button class="close-modal2">×</button>
         </div>
         <div class="modal-body">
-            <form method="post" action="{% url 'add_category' %}" enctype="multipart/form-data" id="categoryForm">
+            <form method="post" action="#" enctype="multipart/form-data" id="categoryForm">
                 {% csrf_token %}
                 <input type="hidden" id="categoryId" name="category_id">
 
@@ -171,7 +171,7 @@
             <p class="text-muted">Cette action est irréversible.</p>
         </div>
         <div class="modal-footer">
-            <form method="POST" action="{% url 'delete_category' %}" id="deleteCategoryForm">
+            <form method="POST" action="#" id="deleteCategoryForm">
                 {% csrf_token %}
                 <input type="hidden" id="deleteCategoryId" name="category_id">
                 <button type="submit" class="btn btn-danger">

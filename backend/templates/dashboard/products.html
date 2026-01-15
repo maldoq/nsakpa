@@ -35,7 +35,7 @@
 
     <!-- Barre d'outils -->
     <div class="toolbar">
-        <form id="filterForm" method="GET" action="{% url 'admin_products' %}">
+        <form id="filterForm" method="GET" action="{% url 'dashboard:products' %}">
             <div class="toolbar-left"> 
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -138,7 +138,7 @@
             <button class="close-modal">×</button>
         </div>
         <div class="modal-body">
-            <form method="post" action="{% url 'add_product' %}" enctype="multipart/form-data" id="productForm">
+            <form method="post" action="#" enctype="multipart/form-data" id="productForm">
                 {% csrf_token %}
                 <input type="hidden" id="productId" name="product_id">
 
@@ -252,7 +252,7 @@
             <p>Voulez-vous vraiment supprimer ce produit ?</p>
         </div>
         <div class="modal-footer">
-            <form method="POST" action="{% url 'delete_product' %}" id="deleteProductForm">
+            <form method="POST" action="#" id="deleteProductForm">
                 {% csrf_token %}
                 <input type="hidden" id="deleteProductId" name="product_id">
                 <button type="submit" class="btn btn-danger">Supprimer</button>

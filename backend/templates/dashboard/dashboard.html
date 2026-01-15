@@ -82,79 +82,20 @@
     </div>
 
     <!-- Graphiques -->
-    <div class="charts-grid">
-        <!-- Graphique des ventes -->
-        <div class="chart-card large">
-            <div class="chart-header">
-                <h3>Évolution des ventes</h3>
-                <div class="chart-actions">
-                    <button class="chart-action active" data-period="day">Jour</button>
-                    <button class="chart-action" data-period="week">Semaine</button>
-                    <button class="chart-action" data-period="month">Mois</button>
-                </div>
-            </div>
-            <div class="chart-content">
-                <canvas id="salesChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Graphique circulaire des catégories -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Ventes par catégorie</h3>
-                <button class="chart-menu">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
-            </div>
-            <div class="chart-content">
-                <canvas id="categoriesChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Top produits -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3>Top Produits</h3>
-                <button class="chart-menu">
-                    <i class="fas fa-ellipsis-v"></i>
-                </button>
-            </div>
-            <div class="products-list">
-                {% for product in top_products %}
-                <div class="product-item">
-                    <!-- Use onerror to set the default image -->
-                    <img src="{{ product.image }}" alt="{{ product.name }}" width="40" height="40" 
-                         onerror="this.onerror=null; this.src=DEFAULT_IMAGE;">
-                    <div class="product-info">
-                        <h4>{{ product.name }}</h4>
-                        <span>{{ product.sales }} ventes</span>
-                    </div>
-                    <div class="product-progress">
-                        <div class="progress-bar" style="width: {{ product.percentage }}%;"></div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="product-item">
-                    <div class="product-info">
-                        <h4>Pas de données disponibles</h4>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
+    <!-- Graphiques supprimés à la demande de l'utilisateur -->
+    <div style="height: 20px;"></div>
 
     <!-- Dernières commandes -->
-    <!-- <div class="recent-orders">
+    <div class="recent-orders">
         <div class="table-header">
             <h3>Commandes récentes</h3>
-            <a href="" class="view-all">Voir tout</a>
+            <a href="{% url 'dashboard:orders' %}" class="view-all">Voir tout</a>
         </div>
         <div class="table-responsive">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>ID Commande</th>
+                        <th>N° Commande</th>
                         <th>Client</th>
                         <th>Produits</th>
                         <th>Total</th>
@@ -166,37 +107,31 @@
                 <tbody>
                     {% for order in recent_orders %}
                     <tr>
-                        <td>{{ order.id }}</td>
+                        <td>{{ order.order_number }}</td>
                         <td>
                             <div class="customer-info">
-                               
-                                <img src="{{ order.customer_image }}" alt="{{ order.customer_name }}" width="32" height="32" 
+                                <img src="{% if order.buyer.profile_image %}{{ order.buyer.profile_image.url }}{% else %}{% static 'img/dashboard/default-avatar.png' %}{% endif %}" alt="{{ order.buyer.username }}" width="32" height="32" 
                                      onerror="this.onerror=null; this.src=DEFAULT_IMAGE;">
-                                <span>{{ order.customer_name }}</span>
+                                <span>{{ order.buyer.username }}</span>
                             </div>
                         </td>
-                        <td>{{ order.products_count }} article{{ order.products_count|pluralize }}</td>
-                        <td>{{ order.total|floatformat:2 }} F CFA</td>
+                        <td>{{ order.items.count }} article{{ order.items.count|pluralize }}</td>
+                        <td>{{ order.total_amount|floatformat:0 }} F CFA</td>
                         <td>
                             <span class="status-badge 
                                 {% if order.status == 'pending' %}pending
-                                {% elif order.status == 'processing' %}processing
-                                {% elif order.status == 'shipped' %}shipped
+                                {% elif order.status == 'preparing' %}processing
+                                {% elif order.status == 'delivering' %}shipped
                                 {% elif order.status == 'delivered' %}completed
-                                {% elif order.status == 'cancelled' %}cancelled{% endif %}">
-                                {% if order.status == 'pending' %}En attente
-                                {% elif order.status == 'processing' %}En cours
-                                {% elif order.status == 'shipped' %}Expédiée
-                                {% elif order.status == 'delivered' %}Livrée
-                                {% elif order.status == 'cancelled' %}Annulée{% endif %}
+                                {% elif order.status == 'cancelled' %}cancelled
+                                {% endif %}">
+                                {{ order.get_status_display }}
                             </span>
                         </td>
-                        <td>{{ order.date }}</td>
+                        <td>{{ order.created_at|date:"d/m/Y" }}</td>
                         <td>
                             <div class="table-actions">
-                                <a href="" title="Voir"><i class="fas fa-eye"></i></a>
-                                <a href="" title="Modifier"><i class="fas fa-edit"></i></a>
-                                <button data-order-id="{{ order.id }}" class="delete-order-btn" title="Supprimer"><i class="fas fa-trash"></i></button>
+                                <a href="#" title="Voir"><i class="fas fa-eye"></i></a>
                             </div>
                         </td>
                     </tr>
@@ -208,7 +143,7 @@
                 </tbody>
             </table>
         </div>
-    </div> -->
+    </div>
     <div style="height: 80px;"></div>
 </div>
 

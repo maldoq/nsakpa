@@ -31,37 +31,37 @@
         <nav class="sidebar-nav">
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="{% url 'admin_dashboard' %}">
+                    <a href="{% url 'dashboard:home' %}">
                         <i class="fas fa-home"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'admin_products' %}">
+                    <a href="{% url 'dashboard:products' %}">
                         <i class="fas fa-box"></i>
                         <span>Produits</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'admin_categories' %}">
+                    <a href="{% url 'dashboard:categories' %}">
                         <i class="fas fa-tags"></i>
                         <span>Catégories</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'admin_orders' %}">
+                    <a href="{% url 'dashboard:orders' %}">
                         <i class="fas fa-shopping-bag"></i>
                         <span>Commandes</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'admin_customers' %}">
+                    <a href="{% url 'dashboard:customers' %}">
                         <i class="fas fa-users"></i>
                         <span>Clients</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'admin_notifications' %}">
+                    <a href="{% url 'dashboard:notifications' %}">
                         <i class="fas fa-bell"></i>
                         <span>Notifications</span>
                         <!-- <span class="badge badge-notification">5</span> -->
@@ -85,6 +85,9 @@
             </div>
 
             <div class="top-bar-right">
+                <a href="{% url 'website:home' %}" class="home-link" style="margin-right: 20px; color: #64748b; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-home"></i> Aller à l'accueil
+                </a>
                 
                 <div class="notification-center">
                     <button class="notification-trigger">
@@ -94,13 +97,13 @@
                     <div class="notification-dropdown">
                         <div class="notification-header">
                             <h3>Notifications</h3>
-                            <button class="mark-all-read" id="mark-all-read">Tout marquer comme lu</button>
+                            <!-- <button class="mark-all-read" id="mark-all-read">Tout marquer comme lu</button> -->
                         </div>
                         <div class="notification-list">
                             <!-- Le contenu sera rempli par JavaScript -->
                             <p class="no-notifications">Chargement des notifications...</p>
                         </div>
-                        <a href="{% url 'admin_notifications' %}" class="view-all">Voir toutes les notifications</a>
+                        <a href="{% url 'dashboard:notifications' %}" class="view-all">Voir toutes les notifications</a>
                     </div>
                 </div>
                 
@@ -117,11 +120,11 @@
                         <i class="fas fa-chevron-down"></i>
                     </button>
                     <div class="profile-dropdown">
-                        <a href="{% url 'admin_profile' %}">
+                        <a href="{% url 'dashboard:profile' %}">
                             <i class="fas fa-user"></i> Mon profil
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a href="{% url 'logout' %}" class="logout-btn">
+                        <a href="{% url 'website:logout' %}" class="logout-btn">
                             <i class="fas fa-sign-out-alt"></i> Déconnexion
                         </a>
                     </div>

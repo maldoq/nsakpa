@@ -13,19 +13,25 @@
             <p class="text-muted">Gérez vos notifications et alertes</p>
         </div>
         <div class="header-right">
-            <!-- <form action="{% url 'mark_all_read' %}" method="post" style="display: inline;">
+            <!-- Formulaire désactivé -->
+            <!-- 
+            <form action="#" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline" id="markAllReadBtn">
                     <i class="fas fa-check-double"></i> Tout marquer comme lu
                 </button>
-            </form> -->
-            <!-- <form action="{% url 'clear_all_notifications' %}" method="post" style="display: inline;">
+            </form> 
+            -->
+            <!-- Formulaire désactivé -->
+            <!--
+            <form action="#" method="post" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-danger" id="clearAllBtn" 
                     onclick="return confirm('Êtes-vous sûr de vouloir effacer toutes les notifications ?');">
                     <i class="fas fa-trash"></i> Effacer tout
                 </button>
-            </form> -->
+            </form>
+            -->
         </div>
     </div>
 
@@ -43,16 +49,16 @@
     <!-- Filtres -->
     <div class="notifications-filters">
         <div class="filter-tabs">
-            <a href="{% url 'admin_notifications' %}?filter=all" 
+            <a href="{% url 'dashboard:notifications' %}?filter=all" 
                 class="filter-tab {% if current_filter == 'all' %}active{% endif %}">
                 Toutes <span class="count">{{ total_count }}</span>
             </a>
-            <a href="{% url 'admin_notifications' %}?filter=unread" 
+            <a href="{% url 'dashboard:notifications' %}?filter=unread" 
                 class="filter-tab {% if current_filter == 'unread' %}active{% endif %}">
                 Non lues <span class="count">{{ unread_count }}</span>
             </a>
             {% for type, display in notification_types %}
-            <!-- <a href="{% url 'admin_notifications' %}?filter={{ type }}" 
+            <!-- <a href="{% url 'dashboard:notifications' %}?filter={{ type }}" 
                 class="filter-tab {% if current_filter == type %}active{% endif %}">
                 {{ display }}
                 {% for type_code, count in type_counts_list %}
@@ -64,7 +70,7 @@
             {% endfor %}
         </div>
         <div class="filter-actions">
-            <form method="get" action="{% url 'admin_notifications' %}" class="search-form">
+            <form method="get" action="{% url 'dashboard:notifications' %}" class="search-form">
                 <input type="hidden" name="filter" value="{{ current_filter }}">
                 <input type="hidden" name="time" value="{{ time_filter }}">
                 <div class="search-box">
@@ -74,7 +80,7 @@
                     <button type="submit" class="btn search-btn">Rechercher</button>
                 </div>
             </form>
-            <form method="get" action="{% url 'admin_notifications' %}" class="time-filter-form">
+            <form method="get" action="{% url 'dashboard:notifications' %}" class="time-filter-form">
                 <input type="hidden" name="filter" value="{{ current_filter }}">
                 <input type="hidden" name="search" value="{{ search_query }}">
                 <select class="filter-select" id="timeFilter" name="time" onchange="this.form.submit()">
@@ -108,7 +114,7 @@
             </div>
             <div class="notification-content">
                 <div class="notification-header">
-                    <a href="{% url 'notification_detail' notif.id %}" class="notification-link">
+                    <a href="{% url 'dashboard:notification_detail' notif.id %}" class="notification-link">
                         {% if notif.type == "order" and notif.order %}
                             Nouvelle commande - {{ notif.order.order_number }}
                         {% else %}

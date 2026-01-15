@@ -184,29 +184,37 @@ class ApiService {
   // 🎭 MÉTHODES FICTIVES (MOCK) - Pour éviter les erreurs 404/500
   // ---------------------------------------------------------------------------
 
-  // Mock: Commandes artisan
   static Future<List<Map<String, dynamic>>> getArtisanOrders({
     String? status,
   }) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simuler délai réseau
-    return [
-      {
-        'id': 'ord_123',
-        'date': '2023-10-25',
-        'status': 'En cours',
-        'total': 45000,
-        'customer': 'Kouassi Jean',
-        'items': 2,
-      },
-      {
-        'id': 'ord_124',
-        'date': '2023-10-24',
-        'status': 'Livré',
-        'total': 12000,
-        'customer': 'Amah Rose',
-        'items': 1,
-      },
-    ];
+    try {
+      final token = await AuthService.getToken();
+      String url = '${RemoteApiService.baseUrl}/dashboard/orders/'; // Endpoint Backend
+      
+      if (status != null) {
+        url += '?status=$status';
+      }
+
+      final response = await http.get(
+        Uri.parse(url),
+        headers: RemoteApiService.getHeaders(token: token),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        // Si c'est paginé
+        if (decoded is Map && decoded['results'] != null) {
+          return List<Map<String, dynamic>>.from(decoded['results']);
+        }
+        if (decoded is List) {
+          return List<Map<String, dynamic>>.from(decoded);
+        }
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Erreur getArtisanOrders: $e');
+      return [];
+    }
   }
 
   // Mock: Profil Artisan (Retourne le user local + des fausses stats)
@@ -349,7 +357,8 @@ class RemoteApiService {
       return 'http://127.0.0.1:8000/api';
     }
     if (Platform.isAndroid) {
-      return 'http://192.168.108.53:8000/api';
+      // 10.0.2.2 est l'alias pour localhost sur l'émulateur Android
+      return 'http://10.0.2.2:8000/api';
     }
     return 'http://127.0.0.1:8000/api';
   }
