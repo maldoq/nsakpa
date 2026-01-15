@@ -71,7 +71,8 @@
                 </div>
                 {% endif %}
 
-                <form method="POST" action="{% url 'contact' %}" class="contact-form">
+                <!-- AJOUT DE 'website:' dans action -->
+                <form method="POST" action="{% url 'website:contact' %}" class="contact-form">
                     {% csrf_token %}
 
                     <div class="form-row double">
@@ -300,7 +301,8 @@
                 </div>
                 {% endif %}
 
-                <form method="POST" action="{% url 'contact' %}" class="contact-form">
+                <!-- AJOUT DE 'website:' dans action -->
+                <form method="POST" action="{% url 'website:contact' %}" class="contact-form">
                     {% csrf_token %}
 
                     <div class="form-row double">

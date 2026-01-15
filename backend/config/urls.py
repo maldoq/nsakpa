@@ -3,19 +3,27 @@ from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from django.conf import settings
 from django.conf.urls.static import static
-from website.views import artisans_list, artisan_detail, post_list
-from orders.views import artisan_application  # Import from orders.views
+# Importez toutes les vues nécessaires ici
+from website.views import (
+    artisans_list, artisan_detail, 
+    post_list, post_detail, create_article, update_article, delete_article
+)
+from orders.views import artisan_application
 
 # Artisans patterns
 artisans_patterns = [
     path('', artisans_list, name='artisans_list'),
-    path('<int:pk>/', artisan_detail, name='artisan_detail'),  # Changed artisan_id to pk
+    path('<int:pk>/', artisan_detail, name='artisan_detail'),
     path('apply/', artisan_application, name='artisan_application'),
 ]
 
-# Blog patterns
+# Blog patterns - CORRIGÉ (ajout des routes manquantes)
 blog_patterns = [
     path('', post_list, name='post_list'),
+    path('<int:pk>/', post_detail, name='post_detail'),
+    path('create/', create_article, name='create_article'),
+    path('<int:pk>/update/', update_article, name='update_article'),
+    path('<int:pk>/delete/', delete_article, name='delete_article'),
 ]
 
 urlpatterns = [
@@ -33,7 +41,7 @@ urlpatterns = [
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     # === SITE WEB (Templates) ===
-    path('', include('website.urls')),  # Pages principales du site
+    path('', include(('website.urls', 'website'), namespace='website')),
     path('artisans/', include((artisans_patterns, 'artisans'), namespace='artisans')),
     path('blog/', include((blog_patterns, 'blog'), namespace='blog')),
     

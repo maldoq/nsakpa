@@ -39,6 +39,8 @@ urlpatterns = [
     
     # Profil client
     path('profile/', views.client_profile, name='client_profile'),
+    path('profile/address/save/', views.client_profile_address, name='client_profile_address'),
+    path('profile/address/delete/<int:pk>/', views.delete_address, name='delete_address'),
     
     # Authentification
     path('login/', views.login_view, name='login'),

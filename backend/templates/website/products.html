@@ -99,7 +99,7 @@
                 <article class="product-card" data-category="{{ product.category.name|lower }}"
                     data-price="{{ product.price }}" data-stock="{{ product.stock }}"
                     data-date="{{ product.created_at|date:'Y-m-d' }}">
-                    <a href="{% url 'product_detail' product.id %}" class="product-link">
+                    <a href="{% url 'website:product_detail' product.id %}" class="product-link">
                         <div class="product-image">
                             {% if product.media.exists %}
                             <img src="{{ product.media.first.file.url }}" alt="{{ product.name }}" loading="lazy">

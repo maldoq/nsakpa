@@ -267,8 +267,9 @@
             <h2>{% if about_content %}{{ about_content.cta_title }}{% else %}Rejoignez l'Aventure N'Sapka{% endif %}</h2>
             <p>{% if about_content %}{{ about_content.cta_content }}{% else %}Que vous soyez un amateur d'art africain, un défenseur du commerce équitable ou un artisan souhaitant élargir vos horizons, nous vous invitons à rejoindre notre communauté.{% endif %}</p>
             <div class="cta-buttons">
-                <a href="{% url 'contact' %}" class="btn btn-primary">Nous Contacter</a>
-                <a href="{% url 'products' %}" class="btn btn-secondary">Découvrir nos Produits</a>
+                <!-- AJOUT DE 'website:' -->
+                <a href="{% url 'website:contact' %}" class="btn btn-primary">Nous Contacter</a>
+                <a href="{% url 'website:products' %}" class="btn btn-secondary">Découvrir nos Produits</a>
             </div>
         </div>
     </section>

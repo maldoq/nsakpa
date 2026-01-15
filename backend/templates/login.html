@@ -10,7 +10,8 @@
     <div class="login-container">
         <div class="login-card">
             <div class="login-logo">
-                <img src="img/website/nsapka_logo.png" alt="Logo N'Sapka"class="logo-img">
+                <!-- Correction du chemin d'image -->
+                <img src="{% static 'img/website/nsapka_logo.png' %}" alt="Logo N'Sapka" class="logo-img">
                 <h1>N'Sapka</h1>
             </div>
 
@@ -29,13 +30,14 @@
             {% endif %}
 
             <!-- Formulaire de connexion -->
-            <form method="POST" class="login-form">
+            <form method="POST" action="{% url 'website:login' %}" class="login-form">
                 {% csrf_token %}
+
                 <div class="form-group">
-                    <label for="email">Email</label>
+                    <label for="email">Email ou Téléphone</label>
                     <div class="input-with-icon">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" name="email" required>
+                        <input type="text" id="email" name="username" class="form-control" required>
                     </div>
                 </div>
 
@@ -43,7 +45,7 @@
                     <label for="password">Mot de passe</label>
                     <div class="input-with-icon">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" name="password" required>
+                        <input type="password" id="password" name="password" class="form-control" required>
                     </div>
                 </div>
 
@@ -52,7 +54,8 @@
                         <input type="checkbox" name="remember">
                         <span>Se souvenir de moi</span>
                     </label>
-                    <a href="{% url 'forgot_password' %}">Mot de passe oublié ?</a>
+                    <!-- Correction ici -->
+                    <a href="{% url 'website:forgot_password' %}">Mot de passe oublié ?</a>
                 </div>
 
                 <button type="submit" class="login-button">
@@ -63,10 +66,10 @@
 
             <!-- Lien pour s'inscrire -->
             <div class="register-link">
-                <p>Vous n'avez pas de compte ? <a href="{% url 'register' %}">S'inscrire</a></p>
+                <!-- Correction ici -->
+                <p>Vous n'avez pas de compte ? <a href="{% url 'website:register' %}">S'inscrire</a></p>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}

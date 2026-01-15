@@ -11,11 +11,11 @@
     <div class="product-container">
         <!-- Fil d'Ariane -->
         <div class="breadcrumb">
-            <a href="{% url 'home' %}">Accueil</a>
+            <a href="{% url 'website:home' %}">Accueil</a> <!-- Correction -->
             <span class="separator">/</span>
-            <a href="{% url 'products' %}">Produits</a>
+            <a href="{% url 'website:products' %}">Produits</a> <!-- Correction -->
             <span class="separator">/</span>
-            <a href="{% url 'products' %}?category={{ product.category.name|lower }}">{{ product.category.name }}</a>
+            <a href="{% url 'website:products' %}?category={{ product.category.name|lower }}">{{ product.category.name }}</a> <!-- Correction -->
             <span class="separator">/</span>
             <span class="current">{{ product.name }}</span>
         </div>

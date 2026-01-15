@@ -11,9 +11,10 @@
     <!-- Fil d'Ariane -->
     <nav class="breadcrumb">
         <div class="container">
-            <a href="{% url 'home' %}">Accueil</a>
+            <!-- AJOUT DE 'website:' -->
+            <a href="{% url 'website:home' %}">Accueil</a>
             <span class="separator">/</span>
-            <a href="{% url 'cart' %}">Panier</a>
+            <a href="{% url 'website:cart' %}">Panier</a>
             <span class="separator">/</span>
             <span class="current">Paiement</span>
         </div>

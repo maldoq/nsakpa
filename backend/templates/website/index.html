@@ -42,7 +42,8 @@
         </div>
         
         <div class="hero-actions">
-            <a href="{% url 'products' %}" class="cta-button primary">
+            <!-- Correction here -->
+            <a href="{% url 'website:products' %}" class="cta-button primary">
                 <span>Explorez les produits</span>
                 <i class="fas fa-arrow-right"></i>
             </a>
@@ -63,7 +64,8 @@
 
             <div class="categories-grid">
                 {% for category in categories %}
-                <a href="{% url 'products' %}?category={{ category.id }}" class="category-card"
+                <!-- Correction here -->
+                <a href="{% url 'website:products' %}?category={{ category.id }}" class="category-card"
                     data-category="{{ category.name|lower }}">
                     <div class="category-icon">
                         <i class="fas {{ category.icon }}" style="color: {{ category.color }}"></i>
@@ -100,18 +102,19 @@
             <div class="products-grid">
                 {% for product in featured_products %}
                 {% if product.stock > 0 %}
-                <article class="product-card" data-category="{{ product.category.name|lower }}">
-                    <a href="{% url 'product_detail' product.id %}" class="product-link">
+                <article class="product-card" data-category="{{ product.category|lower }}">
+                    <!-- Correction here -->
+                    <a href="{% url 'website:product_detail' product.id %}" class="product-link">
                         <div class="product-image">
-                            {% if product.media.exists %}
-                            <img src="{{ product.media.first.file.url }}" alt="{{ product.name }}" loading="lazy">
+                            {% if product.images.exists %}
+                            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
                             {% else %}
-                            <img src="{% static 'images/placeholder.jpg' %}" alt="Image non disponible" loading="lazy">
+                            <img src="{% static 'img/website/nsapka_logo.png' %}" alt="Image non disponible" loading="lazy">
                             {% endif %}
 
-                            {% if product.featured %}
+                            {% if product.is_limited_edition %}
                             <div class="featured-badge">
-                                <i class="fas fa-star"></i> Vedette
+                                <i class="fas fa-star"></i> Édition Limitée
                             </div>
                             {% endif %}
 
@@ -124,7 +127,7 @@
 
                         <div class="product-info">
                             <div class="product-category">
-                                <i class="fas {{ product.category.icon }}" style="color: {{ product.category.color }}"></i>
+                                <i class="fas {{ product.category_icon }}" style="color: {{ product.category_color }}"></i>
                                 {{ product.category.name }}
                             </div>
 
@@ -167,7 +170,8 @@
             </div>
 
             <div class="section-footer">
-                <a href="{% url 'products' %}" class="view-all-btn">
+                <!-- Correction here -->
+                <a href="{% url 'website:products' %}" class="view-all-btn">
                     Voir tous les produits
                     <i class="fas fa-arrow-right"></i>
                 </a>
@@ -221,7 +225,7 @@
                 </header>
 
                 <form class="newsletter-form" id="newsletterForm" method="POST"
-                    action="{% url 'newsletter_subscribe' %}">
+                    action="{% url 'website:newsletter_subscribe' %}"> <!-- Correction here -->
                     {% csrf_token %}
                     <input type="email" name="email" id="newsletterEmail" placeholder="Votre adresse email" required>
                     <button type="submit">

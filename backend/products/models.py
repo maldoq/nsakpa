@@ -32,6 +32,32 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def category_icon(self):
+        icons = {
+            'Sculpture': 'fa-hammer',
+            'Tissage': 'fa-scroll',
+            'Poterie': 'fa-mug-hot',
+            'Bijoux': 'fa-gem',
+            'Vannerie': 'fa-shopping-basket',
+            'Peinture': 'fa-palette',
+            'Mode': 'fa-tshirt',
+        }
+        return icons.get(self.category, 'fa-box')
+
+    @property
+    def category_color(self):
+        colors = {
+            'Sculpture': '#8B4513',
+            'Tissage': '#D2691E',
+            'Poterie': '#A0522D',
+            'Bijoux': '#DAA520',
+            'Vannerie': '#CD853F',
+            'Peinture': '#B22222',
+            'Mode': '#C71585',
+        }
+        return colors.get(self.category, '#888888')
+
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='products/')

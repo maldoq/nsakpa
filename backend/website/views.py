@@ -1,38 +1,46 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, logout, authenticate
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required  # <-- Add this line
 from django.contrib import messages
-from django.core.paginator import Paginator
 from django.db.models import Q
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
+from .forms import WebsiteLoginForm, WebsiteRegistrationForm
+from django.core.paginator import Paginator
 from products.models import Product
 from orders.models import Order, OrderItem
-from users.models import User
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
-from django.http import JsonResponse
+from users.models import Address # Assurez-vous d'importer Address
 
+
+User = get_user_model()
 
 # ==================== PAGES PRINCIPALES ====================
 
+
+CATEGORIES_DATA = [
+    {'id': 'sculpture', 'name': 'Sculpture', 'icon': 'fa-hammer', 'color': '#8B4513', 'description': 'Œuvres taillées dans le bois et la pierre'},
+    {'id': 'tissage', 'name': 'Tissage', 'icon': 'fa-scroll', 'color': '#D2691E', 'description': 'Textiles traditionnels et modernes'},
+    {'id': 'poterie', 'name': 'Poterie', 'icon': 'fa-mug-hot', 'color': '#A0522D', 'description': 'Céramiques et terres cuites'},
+    {'id': 'bijoux', 'name': 'Bijoux', 'icon': 'fa-gem', 'color': '#DAA520', 'description': 'Parures en or, argent et perles'},
+    {'id': 'vannerie', 'name': 'Vannerie', 'icon': 'fa-shopping-basket', 'color': '#CD853F', 'description': 'Paniers et objets tressés'},
+    {'id': 'mode', 'name': 'Mode', 'icon': 'fa-tshirt', 'color': '#C71585', 'description': 'Vêtements et accessoires de mode'},
+]
+
 def home(request):
     """Page d'accueil"""
-    # Récupérer les catégories uniques des produits
-    categories = Product.objects.values_list('category', flat=True).distinct()[:6]
-    featured_products = Product.objects.all().order_by('-created_at')[:8]
+    # Récupérer les produits récents comme produits vedettes
+    featured_products = Product.objects.filter(stock__gt=0).order_by('-created_at')[:8]
     
     context = {
-        'categories': categories,
         'featured_products': featured_products,
+        'categories': CATEGORIES_DATA,
     }
     return render(request, 'website/index.html', context)
-
 
 def products_list(request):
     """Liste des produits avec filtres"""
     products = Product.objects.all()
-    
-    # Récupérer les catégories uniques
-    categories = Product.objects.values_list('category', flat=True).distinct()
     
     # Filtres
     category = request.GET.get('category')
@@ -40,7 +48,7 @@ def products_list(request):
     sort_by = request.GET.get('sort', 'newest')
     
     if category:
-        products = products.filter(category=category)
+        products = products.filter(category__iexact=category)
     
     if search_query:
         products = products.filter(
@@ -65,7 +73,7 @@ def products_list(request):
     
     context = {
         'products': products,
-        'categories': categories,
+        'categories': CATEGORIES_DATA,
         'selected_category': category,
         'search_query': search_query,
         'sort_by': sort_by,
@@ -102,7 +110,7 @@ def contact(request):
         message = request.POST.get('message')
         # TODO: Envoyer l'email ou sauvegarder le message
         messages.success(request, 'Votre message a été envoyé avec succès!')
-        return redirect('contact')
+        return redirect('website:contact')  # <-- Correction ici
     
     return render(request, 'website/contact.html')
 
@@ -211,9 +219,9 @@ def add_to_cart(request, product_id):
     messages.success(request, f'{product.name} ajouté au panier!')
     
     # Rediriger vers la page précédente ou le panier
-    next_url = request.GET.get('next', 'cart')
+    next_url = request.GET.get('next', 'website:cart') # <-- Correction ici
+    if next_url == 'cart': next_url = 'website:cart'
     return redirect(next_url)
-
 
 def remove_from_cart(request, product_id):
     """Retirer du panier"""
@@ -225,8 +233,7 @@ def remove_from_cart(request, product_id):
         request.session['cart'] = cart
         messages.success(request, 'Article retiré du panier')
     
-    return redirect('cart')
-
+    return redirect('website:cart') # <-- Correction ici
 
 def update_cart(request, product_id):
     """Mettre à jour la quantité dans le panier"""
@@ -289,7 +296,7 @@ def payment(request):
         # Vider le panier
         request.session['cart'] = {}
         
-        return redirect('confirmation')
+        return redirect('website:confirmation') # <-- Correction ici
     
     context = {
         'cart_items': cart_items,
@@ -333,76 +340,132 @@ def client_profile(request):
     """Profil du client"""
     orders = Order.objects.filter(buyer=request.user).order_by('-created_at')
     
+    # Récupérer les articles de blog si le modèle existe
+    # user_blog_posts = BlogPost.objects.filter(author=request.user) 
+    user_blog_posts = [] 
+
     context = {
         'user': request.user,
         'orders': orders,
+        'user_blog_posts': user_blog_posts,
+        # AJOUTER CES VARIABLES POUR LES ADRESSES :
+        'user_addresses': Address.objects.filter(user=request.user),
+        'address_types': Address.ADDRESS_TYPE_CHOICES, # Assurez-vous que votre modèle a ce champ
     }
     return render(request, 'website/profile.html', context)
+
+@login_required
+@require_POST
+def client_profile_address(request):
+    """Ajouter ou modifier une adresse"""
+    address_id = request.POST.get('address_id')
+    
+    if address_id:
+        # Modification
+        address = get_object_or_404(Address, pk=address_id, user=request.user)
+    else:
+        # Création
+        address = Address(user=request.user)
+    
+    # Remplissage des champs
+    address.address_type = request.POST.get('address_type')
+    address.street_address = request.POST.get('street_address')
+    address.apartment = request.POST.get('apartment')
+    address.city = request.POST.get('city')
+    address.postal_code = request.POST.get('postal_code')
+    address.country = request.POST.get('country')
+    
+    # Gestion de l'adresse par défaut
+    if request.POST.get('is_default'):
+        Address.objects.filter(user=request.user).update(is_default=False)
+        address.is_default = True
+        
+    address.save()
+    messages.success(request, "Adresse enregistrée avec succès.")
+    return redirect('website:client_profile')
+
+@login_required
+def delete_address(request, pk):
+    """Supprimer une adresse (appelé via AJAX ou direct)"""
+    address = get_object_or_404(Address, pk=pk, user=request.user)
+    address.delete()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+        
+    messages.success(request, "Adresse supprimée.")
+    return redirect('website:client_profile')
 
 
 # ==================== AUTHENTIFICATION ====================
 
 def login_view(request):
-    """Page de connexion"""
+    """Connexion au site web"""
     if request.user.is_authenticated:
-        return redirect('home')
-    
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            login(request, user)
-            next_url = request.GET.get('next', 'home')
-            messages.success(request, f'Bienvenue {user.first_name or user.username}!')
-            return redirect(next_url)
-        else:
-            messages.error(request, 'Nom d\'utilisateur ou mot de passe incorrect')
-    
-    return render(request, 'login.html')
+        return redirect('website:home')
 
+    if request.method == 'POST':
+        form = WebsiteLoginForm(request.POST)
+        if form.is_valid():
+            login_input = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+
+            # Chercher l'utilisateur par Username, Email ou Phone
+            user_obj = User.objects.filter(
+                Q(username=login_input) | 
+                Q(email=login_input) | 
+                Q(phone=login_input)
+            ).first()
+
+            if user_obj is not None:
+                user = authenticate(username=user_obj.username, password=password)
+                if user is not None:
+                    login(request, user)
+                    messages.success(request, f"Bienvenue {user.first_name} !")
+                    
+                    # Redirection selon le rôle
+                    if user.role == 'artisan':
+                        return redirect('dashboard:home')
+                    return redirect('website:home')
+                else:
+                    messages.error(request, "Mot de passe incorrect.")
+            else:
+                messages.error(request, "Aucun compte trouvé avec cet identifiant.")
+    else:
+        form = WebsiteLoginForm()
+
+    return render(request, 'login.html', {'form': form})
 
 def register_view(request):
-    """Page d'inscription"""
+    """Inscription sur le site web"""
     if request.user.is_authenticated:
-        return redirect('home')
-    
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        password = request.POST.get('password')
-        password2 = request.POST.get('password2')
-        
-        if password != password2:
-            messages.error(request, 'Les mots de passe ne correspondent pas')
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, 'Ce nom d\'utilisateur existe déjà')
-        elif User.objects.filter(email=email).exists():
-            messages.error(request, 'Cet email existe déjà')
-        elif User.objects.filter(phone=phone).exists():
-            messages.error(request, 'Ce numéro de téléphone existe déjà')
-        else:
-            user = User.objects.create_user(
-                username=username,
-                email=email,
-                phone=phone,
-                password=password,
-                role='buyer'
-            )
-            login(request, user)
-            messages.success(request, 'Compte créé avec succès!')
-            return redirect('home')
-    
-    return render(request, 'register.html')
+        return redirect('website:home')
 
+    if request.method == 'POST':
+        form = WebsiteRegistrationForm(request.POST)
+        if form.is_valid():
+            try:
+                user = form.save()
+                login(request, user)  # Connexion automatique
+                messages.success(request, "Votre compte a été créé avec succès !")
+                
+                if user.role == 'artisan':
+                    return redirect('dashboard:home')
+                return redirect('website:home')
+            except Exception as e:
+                messages.error(request, f"Erreur lors de l'inscription : {str(e)}")
+        else:
+            messages.error(request, "Veuillez corriger les erreurs dans le formulaire.")
+    else:
+        form = WebsiteRegistrationForm()
+
+    return render(request, 'register.html', {'form': form})
 
 def logout_view(request):
     """Déconnexion"""
     logout(request)
-    messages.success(request, 'Vous avez été déconnecté')
-    return redirect('home')
+    messages.info(request, "Vous avez été déconnecté.")
+    return redirect('website:login')
 
 
 def forgot_password(request):
@@ -423,7 +486,7 @@ def newsletter_subscribe(request):
         email = request.POST.get('email')
         # TODO: Sauvegarder l'email dans un modèle Newsletter
         messages.success(request, 'Merci pour votre inscription à notre newsletter!')
-    return redirect('home')
+    return redirect('website:home') # <-- Correction ici
 
 
 # ==================== PRÉVISUALISATION ====================

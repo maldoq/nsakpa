@@ -21,7 +21,8 @@
         <nav class="nav-container">
             <div class="logo-container">
                 <img src="{% static 'img/website/nsapka_logo.png' %}" alt="Logo N'Sapka" class="logo-img">
-                <a href="{% url 'home' %}" class="logo">N'Sapka</a>
+                <!-- Correction : ajout de 'website:' -->
+                <a href="{% url 'website:home' %}" class="logo">N'Sapka</a>
             </div>
 
             <div class="burger-menu">
@@ -31,16 +32,17 @@
             </div>
     
             <ul class="nav-links" id="nav-links">
-                <li><a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">Accueil</a></li>
-                <li><a href="{% url 'products' %}" class="{% if request.path == '/products/' %}active{% endif %}">Boutique</a></li>
+                <!-- Correction des liens du menu -->
+                <li><a href="{% url 'website:home' %}" class="{% if request.path == '/' %}active{% endif %}">Accueil</a></li>
+                <li><a href="{% url 'website:products' %}" class="{% if request.path == '/products/' %}active{% endif %}">Boutique</a></li>
                 <li><a href="{% url 'artisans:artisans_list' %}" class="{% if request.path == '/artisans/' %}active{% endif %}">Artisans</a></li>
                 <li><a href="{% url 'blog:post_list' %}" class="{% if request.path == '/blog/' %}active{% endif %}">Blog</a></li>
-                <li><a href="{% url 'about' %}" class="{% if request.path == '/about/' %}active{% endif %}">À propos</a></li>
-                <li><a href="{% url 'contact' %}" class="{% if request.path == '/contact/' %}active{% endif %}">Contact</a></li>
+                <li><a href="{% url 'website:about' %}" class="{% if request.path == '/about/' %}active{% endif %}">À propos</a></li>
+                <li><a href="{% url 'website:contact' %}" class="{% if request.path == '/contact/' %}active{% endif %}">Contact</a></li>
     
                 <!-- Icône du panier -->
                 <li class="cart-icon">
-                    <a href="{% url 'cart' %}" class="{% if request.path == '/cart/' %}active{% endif %}">
+                    <a href="{% url 'website:cart' %}" class="{% if request.path == '/cart/' %}active{% endif %}">
                         <i class="fas fa-shopping-cart"></i>
                     </a>
                     <span class="cart-count">0</span>
@@ -53,11 +55,11 @@
                     </a>
                     <ul class="dropdown-menu" id="user-dropdown">
                         {% if user.is_authenticated %}
-                        <li><a href="{% url 'client_profile' %}">Profil</a></li>
-                        <li><a href="{% url 'logout' %}">Déconnexion</a></li>
+                        <li><a href="{% url 'website:client_profile' %}">Profil</a></li>
+                        <li><a href="{% url 'website:logout' %}">Déconnexion</a></li>
                         {% else %}
-                        <li><a href="{% url 'login' %}">Connexion</a></li>
-                        <li><a href="{% url 'register' %}">Inscription</a></li>
+                        <li><a href="{% url 'website:login' %}">Connexion</a></li>
+                        <li><a href="{% url 'website:register' %}">Inscription</a></li>
                         {% endif %}
                     </ul>
                 </li>
@@ -84,8 +86,9 @@
             <div class="footer-section">
                 <h3>Liens rapides</h3>
                 <ul class="footer-links">
-                    <li><a href="{% url 'home' %}">Accueil</a></li>
-                    <li><a href="{% url 'products' %}">Boutique</a></li>
+                    <!-- Ajout de 'website:' devant home et products -->
+                    <li><a href="{% url 'website:home' %}">Accueil</a></li>
+                    <li><a href="{% url 'website:products' %}">Boutique</a></li>
                     <li><a href="{% url 'blog:post_list' %}">Blog</a></li>
                     <li><a href="#" class="special-link">Devenir vendeur</a></li>
                 </ul>
@@ -94,8 +97,9 @@
             <div class="footer-section">
                 <h3>Information</h3>
                 <ul class="footer-links">
-                    <li><a href="{% url 'about' %}">À propos</a></li>
-                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <!-- Ajout de 'website:' devant about et contact -->
+                    <li><a href="{% url 'website:about' %}">À propos</a></li>
+                    <li><a href="{% url 'website:contact' %}">Contact</a></li>
                     <li><a href="#">Conditions d'utilisation</a></li>
                     <li><a href="#">Politique de confidentialité</a></li>
                     <li><a href="#">FAQ</a></li>
