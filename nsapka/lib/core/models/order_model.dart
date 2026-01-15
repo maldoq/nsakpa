@@ -37,6 +37,11 @@ class OrderModel {
   final String? trackingNumber;
   final List<OrderTracking> tracking;
 
+  // Nouveaux champs pour la réception
+  final bool isDelivered;
+  final bool isReceived;
+  final DateTime? receivedAt;
+
   OrderModel({
     required this.id,
     required this.buyerId,
@@ -58,6 +63,9 @@ class OrderModel {
     this.deliveryPhone,
     this.trackingNumber,
     this.tracking = const [],
+    this.isDelivered = false,
+    this.isReceived = false,
+    this.receivedAt,
   });
 
   // Ajoutez cette méthode dans votre OrderModel existant
@@ -68,6 +76,7 @@ class OrderModel {
       if (value is String) return double.tryParse(value) ?? 0.0;
       return 0.0;
     }
+
     return OrderModel(
       id: json['id'].toString(),
       buyerId:
@@ -104,6 +113,11 @@ class OrderModel {
               ?.map((t) => OrderTracking.fromJson(t))
               .toList() ??
           [],
+      isDelivered: json['is_delivered'] ?? false,
+      isReceived: json['is_received'] ?? false,
+      receivedAt: json['received_at'] != null
+          ? DateTime.parse(json['received_at'])
+          : null,
     );
   }
 
@@ -244,6 +258,7 @@ class OrderItem {
       if (value is String) return double.tryParse(value) ?? 0.0;
       return 0.0;
     }
+
     return OrderItem(
       productId:
           json['product_id']?.toString() ??
@@ -283,6 +298,61 @@ class OrderTracking {
       message: json['message'] ?? '',
       timestamp: DateTime.parse(json['timestamp']),
       location: json['location'],
+    );
+  }
+}
+
+extension OrderModelExtension on OrderModel {
+  // Méthode copyWith pour créer une copie modifiée
+  OrderModel copyWith({
+    String? id,
+    String? buyerId,
+    String? buyerName,
+    String? artisanId,
+    String? artisanName,
+    List<OrderItem>? items,
+    double? subtotal,
+    double? deliveryFee,
+    double? total,
+    OrderStatus? status,
+    PaymentStatus? paymentStatus,
+    String? paymentMethod,
+    String? transactionId,
+    DateTime? createdAt,
+    DateTime? confirmedAt,
+    DateTime? deliveredAt,
+    String? deliveryAddress,
+    String? deliveryPhone,
+    String? trackingNumber,
+    List<OrderTracking>? tracking,
+    bool? isDelivered,
+    bool? isReceived,
+    DateTime? receivedAt,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      buyerId: buyerId ?? this.buyerId,
+      buyerName: buyerName ?? this.buyerName,
+      artisanId: artisanId ?? this.artisanId,
+      artisanName: artisanName ?? this.artisanName,
+      items: items ?? this.items,
+      subtotal: subtotal ?? this.subtotal,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      total: total ?? this.total,
+      status: status ?? this.status,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      transactionId: transactionId ?? this.transactionId,
+      createdAt: createdAt ?? this.createdAt,
+      confirmedAt: confirmedAt ?? this.confirmedAt,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
+      deliveryAddress: deliveryAddress ?? this.deliveryAddress,
+      deliveryPhone: deliveryPhone ?? this.deliveryPhone,
+      trackingNumber: trackingNumber ?? this.trackingNumber,
+      tracking: tracking ?? this.tracking,
+      isDelivered: isDelivered ?? this.isDelivered,
+      isReceived: isReceived ?? this.isReceived,
+      receivedAt: receivedAt ?? this.receivedAt,
     );
   }
 }

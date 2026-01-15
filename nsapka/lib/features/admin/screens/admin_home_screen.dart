@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/models/user_model.dart';
+import 'admin_order_management_screen.dart';
+import 'test_dynamic_order_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -19,6 +21,32 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     return Scaffold(
       body: _buildBody(),
       bottomNavigationBar: _buildBottomNavigationBar(),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TestDynamicOrderScreen(),
+              ),
+            ),
+            heroTag: "test_orders",
+            child: const Icon(Icons.science),
+            backgroundColor: Colors.orange,
+            foregroundColor: Colors.white,
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            onPressed: () => Navigator.pushNamed(context, '/test-orders'),
+            icon: const Icon(Icons.shopping_cart),
+            label: const Text('🧪 Test'),
+            backgroundColor: Colors.green,
+            foregroundColor: Colors.white,
+            heroTag: "test_purchases",
+          ),
+        ],
+      ),
     );
   }
 
@@ -500,14 +528,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   // Gestion des commandes
   Widget _buildOrdersTab() {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Gestion des commandes"),
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.textWhite,
-      ),
-      body: const Center(child: Text("Gestion des commandes - À implémenter")),
-    );
+    return const AdminOrderManagementScreen();
   }
 
   // Paramètres

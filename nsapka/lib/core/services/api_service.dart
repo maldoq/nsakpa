@@ -8,6 +8,7 @@ import 'package:nsapka/core/models/order_model.dart';
 import 'package:nsapka/core/models/product_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'auth_service.dart';
 import '../models/user_model.dart';
 import 'auth_service.dart';
 
@@ -198,29 +199,60 @@ class ApiService {
   // 🎭 MÉTHODES FICTIVES (MOCK) - Pour éviter les erreurs 404/500
   // ---------------------------------------------------------------------------
 
-  // Mock: Commandes artisan
+  // Récupérer les commandes d'un artisan depuis le backend
   static Future<List<Map<String, dynamic>>> getArtisanOrders({
     String? status,
   }) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simuler délai réseau
-    return [
-      {
-        'id': 'ord_123',
-        'date': '2023-10-25',
-        'status': 'En cours',
-        'total': 45000,
-        'customer': 'Kouassi Jean',
-        'items': 2,
-      },
-      {
-        'id': 'ord_124',
-        'date': '2023-10-24',
-        'status': 'Livré',
-        'total': 12000,
-        'customer': 'Amah Rose',
-        'items': 1,
-      },
-    ];
+    try {
+      return await RemoteApiService.getArtisanOrders(status: status);
+    } catch (e) {
+      debugPrint('Erreur lors de la récupération des commandes artisan: $e');
+      return []; // Retourner liste vide en cas d'erreur
+    }
+  }
+
+  // Mettre à jour le statut d'une commande
+  static Future<bool> updateOrderStatus(String orderId, String status) async {
+    try {
+      return await RemoteApiService.updateOrderStatus(orderId, status);
+    } catch (e) {
+      debugPrint('Erreur lors de la mise à jour du statut de la commande: $e');
+      return false;
+    }
+  }
+
+  // Confirmer la réception d'une commande
+  static Future<bool> confirmReceived(String orderId) async {
+    try {
+      return await RemoteApiService.confirmReceived(orderId);
+    } catch (e) {
+      debugPrint('Erreur lors de la confirmation de réception: $e');
+      return false;
+    }
+  }
+
+  // Récupérer les commandes d'un acheteur depuis le backend
+  static Future<List<Map<String, dynamic>>> getBuyerOrders() async {
+    try {
+      return await RemoteApiService.getBuyerOrders();
+    } catch (e) {
+      debugPrint('Erreur lors de la récupération des commandes acheteur: $e');
+      return [];
+    }
+  }
+
+  // Récupérer toutes les commandes pour l'admin
+  static Future<List<Map<String, dynamic>>> getAllOrders({
+    String? status,
+    String? artisanId,
+    String? buyerId,
+  }) async {
+    try {
+      return await RemoteApiService.getAllOrders();
+    } catch (e) {
+      debugPrint('Erreur lors de la récupération de toutes les commandes: $e');
+      return [];
+    }
   }
 
   // Mock: Profil Artisan (Retourne le user local + des fausses stats)
@@ -780,6 +812,119 @@ class RemoteApiService {
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       debugPrint('💥 Erreur removeFavorite: $e');
+      return false;
+    }
+  }
+
+  // Récupérer les commandes d'un artisan
+  static Future<List<Map<String, dynamic>>> getArtisanOrders({
+    String? status,
+  }) async {
+    try {
+      final token = await AuthService.getToken();
+
+      final uri = Uri.parse('$baseUrl/orders/artisan/');
+      final response = await http.get(uri, headers: getHeaders(token: token));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        debugPrint('Erreur getArtisanOrders: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Exception getArtisanOrders: $e');
+      return [];
+    }
+  }
+
+  // Récupérer les commandes d'un acheteur depuis le backend
+  static Future<List<Map<String, dynamic>>> getBuyerOrders() async {
+    try {
+      final token = await AuthService.getToken();
+
+      final uri = Uri.parse('$baseUrl/orders/my/');
+      final response = await http.get(uri, headers: getHeaders(token: token));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        debugPrint('Erreur getBuyerOrders: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Exception getBuyerOrders: $e');
+      return [];
+    }
+  }
+
+  // Récupérer toutes les commandes (pour admin)
+  static Future<List<Map<String, dynamic>>> getAllOrders() async {
+    try {
+      final token = await AuthService.getToken();
+
+      final uri = Uri.parse('$baseUrl/orders/');
+      final response = await http.get(uri, headers: getHeaders(token: token));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      } else {
+        debugPrint('Erreur getAllOrders: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Exception getAllOrders: $e');
+      return [];
+    }
+  }
+
+  // Mettre à jour le statut d'une commande
+  static Future<bool> updateOrderStatus(String orderId, String status) async {
+    try {
+      final token = await AuthService.getToken();
+      final uri = Uri.parse('$baseUrl/orders/$orderId/update_status/');
+
+      final response = await http.patch(
+        uri,
+        headers: getHeaders(token: token),
+        body: json.encode({'status': status}),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Erreur updateOrderStatus: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Exception updateOrderStatus: $e');
+      return false;
+    }
+  }
+
+  // Confirmer la réception d'une commande
+  static Future<bool> confirmReceived(String orderId) async {
+    try {
+      final token = await AuthService.getToken();
+      final uri = Uri.parse('$baseUrl/orders/$orderId/confirm_received/');
+
+      final response = await http.patch(
+        uri,
+        headers: getHeaders(token: token),
+        body: json.encode({}),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        debugPrint('Erreur confirmReceived: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('Exception confirmReceived: $e');
       return false;
     }
   }

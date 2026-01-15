@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import 'artisan_products_screen.dart';
 import 'artisan_orders_screen.dart';
+import 'artisan_order_management_screen.dart';
 import 'artisan_chat_screen.dart';
 import 'artisan_profile_screen.dart';
 import '../../../core/services/api_service.dart';
@@ -46,7 +47,7 @@ class _ArtisanHomeScreenState extends State<ArtisanHomeScreen> {
       case 0:
         return const ArtisanProductsScreen();
       case 1:
-        return const ArtisanOrdersScreen();
+        return const ArtisanOrderManagementScreen();
       case 2:
         return const ArtisanChatScreen();
       case 3:

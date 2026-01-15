@@ -1,42 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/order_model.dart';
+import '../../../core/services/api_service.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   final OrderModel order;
 
-  const OrderTrackingScreen({
-    super.key,
-    required this.order,
-  });
+  const OrderTrackingScreen({super.key, required this.order});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Suivi de commande'),
+        title: Text('track_order'.tr()),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.textWhite,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              // Refresh order status
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('order_status_updated'.tr())),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
             // En-tête avec statut
             _buildHeader(),
-            
+
             // Timeline de suivi
             _buildTimeline(),
-            
+
             // Informations de livraison
             _buildDeliveryInfo(),
-            
+
             // Informations de paiement
             _buildPaymentInfo(),
-            
+
             // Produits
             _buildProducts(),
-            
+
             // Actions
             _buildActions(context),
           ],
@@ -49,9 +59,7 @@ class OrderTrackingScreen extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: _getStatusGradient(),
-      ),
+      decoration: BoxDecoration(gradient: _getStatusGradient()),
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -70,9 +78,9 @@ class OrderTrackingScreen extends StatelessWidget {
                 color: AppColors.textWhite,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Statut
             Text(
               order.statusText,
@@ -83,18 +91,18 @@ class OrderTrackingScreen extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Numéro de commande
             Text(
-              'Commande #${order.id}',
+              '${'order_number'.tr()} #${order.id}',
               style: TextStyle(
                 fontSize: 14,
                 color: AppColors.textWhite.withValues(alpha: 0.9),
               ),
             ),
-            
+
             if (order.trackingNumber != null) ...[
               const SizedBox(height: 4),
               Text(
@@ -120,9 +128,9 @@ class OrderTrackingScreen extends StatelessWidget {
       OrderStatus.inTransit,
       OrderStatus.delivered,
     ];
-    
+
     final currentIndex = allStatuses.indexOf(order.status);
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -136,14 +144,14 @@ class OrderTrackingScreen extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           ...List.generate(allStatuses.length, (index) {
             final status = allStatuses[index];
             final isCompleted = index <= currentIndex;
             final isCurrent = index == currentIndex;
-            
+
             return _buildTimelineItem(
               status: status,
               isCompleted: isCompleted,
@@ -162,8 +170,10 @@ class OrderTrackingScreen extends StatelessWidget {
     required bool isCurrent,
     required bool isLast,
   }) {
-    final tracking = order.tracking.where((t) => t.status == status).firstOrNull;
-    
+    final tracking = order.tracking
+        .where((t) => t.status == status)
+        .firstOrNull;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -184,7 +194,9 @@ class OrderTrackingScreen extends StatelessWidget {
               child: Icon(
                 isCompleted ? Icons.check : Icons.circle,
                 size: 20,
-                color: isCompleted ? AppColors.textWhite : AppColors.textSecondary,
+                color: isCompleted
+                    ? AppColors.textWhite
+                    : AppColors.textSecondary,
               ),
             ),
             if (!isLast)
@@ -195,9 +207,9 @@ class OrderTrackingScreen extends StatelessWidget {
               ),
           ],
         ),
-        
+
         const SizedBox(width: 16),
-        
+
         // Contenu
         Expanded(
           child: Container(
@@ -210,7 +222,9 @@ class OrderTrackingScreen extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
-                    color: isCompleted ? AppColors.textPrimary : AppColors.textSecondary,
+                    color: isCompleted
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
                   ),
                 ),
                 if (tracking != null) ...[
@@ -251,7 +265,9 @@ class OrderTrackingScreen extends StatelessWidget {
                             tracking.location!,
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary.withValues(alpha: 0.7),
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -295,9 +311,9 @@ class OrderTrackingScreen extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           _buildInfoRow(Icons.person, 'Destinataire', order.buyerName),
           _buildInfoRow(Icons.location_on, 'Adresse', order.deliveryAddress),
           if (order.deliveryPhone != null)
@@ -334,16 +350,16 @@ class OrderTrackingScreen extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           _buildInfoRow(Icons.credit_card, 'Méthode', order.paymentMethod),
           _buildInfoRow(Icons.security, 'Statut', order.paymentStatusText),
           if (order.transactionId != null)
             _buildInfoRow(Icons.receipt, 'Transaction', order.transactionId!),
-          
+
           const Divider(height: 24),
-          
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -424,9 +440,9 @@ class OrderTrackingScreen extends StatelessWidget {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           ...order.items.map((item) => _buildProductItem(item)),
         ],
       ),
@@ -450,7 +466,10 @@ class OrderTrackingScreen extends StatelessWidget {
                   width: 60,
                   height: 60,
                   color: AppColors.border,
-                  child: const Icon(Icons.image, color: AppColors.textSecondary),
+                  child: const Icon(
+                    Icons.image,
+                    color: AppColors.textSecondary,
+                  ),
                 );
               },
             ),
@@ -497,7 +516,8 @@ class OrderTrackingScreen extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
-          if (order.status != OrderStatus.delivered && order.status != OrderStatus.cancelled)
+          if (order.status != OrderStatus.delivered &&
+              order.status != OrderStatus.cancelled)
             ElevatedButton.icon(
               onPressed: () {
                 // Contacter le support
@@ -513,7 +533,7 @@ class OrderTrackingScreen extends StatelessWidget {
                 ),
               ),
             ),
-          
+
           if (order.status == OrderStatus.delivered) ...[
             ElevatedButton.icon(
               onPressed: () {
@@ -569,16 +589,26 @@ class OrderTrackingScreen extends StatelessWidget {
     switch (order.status) {
       case OrderStatus.pending:
       case OrderStatus.confirmed:
-        return const LinearGradient(colors: [AppColors.warning, AppColors.accent]);
+        return const LinearGradient(
+          colors: [AppColors.warning, AppColors.accent],
+        );
       case OrderStatus.preparing:
       case OrderStatus.readyForPickup:
-        return const LinearGradient(colors: [AppColors.primary, AppColors.secondary]);
+        return const LinearGradient(
+          colors: [AppColors.primary, AppColors.secondary],
+        );
       case OrderStatus.inTransit:
-        return const LinearGradient(colors: [AppColors.secondary, AppColors.accent]);
+        return const LinearGradient(
+          colors: [AppColors.secondary, AppColors.accent],
+        );
       case OrderStatus.delivered:
-        return const LinearGradient(colors: [AppColors.success, AppColors.primary]);
+        return const LinearGradient(
+          colors: [AppColors.success, AppColors.primary],
+        );
       case OrderStatus.cancelled:
-        return const LinearGradient(colors: [AppColors.error, AppColors.textSecondary]);
+        return const LinearGradient(
+          colors: [AppColors.error, AppColors.textSecondary],
+        );
     }
   }
 
@@ -623,7 +653,7 @@ class OrderTrackingScreen extends StatelessWidget {
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
-    
+
     if (diff.inDays == 0) {
       return 'Aujourd\'hui à ${dateTime.hour}:${dateTime.minute.toString().padLeft(2, '0')}';
     } else if (diff.inDays == 1) {

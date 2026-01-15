@@ -64,31 +64,95 @@ Cette API est construite avec Django REST Framework.
 | Méthode | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/orders/` | **Passer une commande**. Après validation du panier. |
-| `GET` | `/orders/` | Historique de mes commandes. |
-| `GET` | `/orders/{id}/` | Détails et statut d'une commande. |
+| `GET` | `/orders/` | Liste des commandes (selon rôle: Admin=tout, Artisan=ses commandes, Acheteur=ses achats). |
+| `GET` | `/orders/my/` | Mes commandes en tant qu'acheteur. |
+| `GET` | `/orders/artisan/` | Commandes contenant mes produits (Artisan). |
+| `POST` | `/orders/pay/` | Payer une commande (simule Orange Money). |
+| `PATCH` | `/orders/{id}/update_status/` | Mettre à jour le statut (Artisan ou Admin). |
+| `PATCH` | `/orders/{id}/confirm_received/` | Confirmer la réception (Acheteur). |
+| `POST` | `/orders/{id}/confirm-delivery/` | Confirmer la livraison (Acheteur). |
+| `POST` | `/orders/{id}/cancel/` | Annuler une commande (restaure le stock). |
 
-**Commande (JSON Sample) :**
+**Créer une commande (JSON Sample) :**
 ```json
 {
-    "buyer": 2, // ID de l'acheteur
-    "total_amount": 50000,
+    "items": [
+        {
+            "product_id": 5,
+            "quantity": 1
+        },
+        {
+            "product_id": 8,
+            "quantity": 2
+        }
+    ],
+    "delivery_address": "Cocody Riviera, Abidjan",
+    "delivery_phone": "+22501020304",
+    "payment_method": "orange_money"
+}
+```
+
+**Réponse complète (GET /orders/) :**
+```json
+{
+    "id": 1,
+    "buyer_id": "2",
+    "buyer_name": "Jean Acheteur",
+    "artisan_id": "3",
+    "artisan_name": "Marie Artisan",
+    "status": "paid",
+    "status_display": "Payé",
+    "total_amount": "50000",
+    "subtotal": "50000",
+    "delivery_fee": "0",
     "delivery_address": "Cocody Riviera, Abidjan",
     "delivery_phone": "+22501020304",
     "payment_method": "orange_money",
+    "payment_status": "inescrow",
+    "transaction_id": "TXN_123ABC",
+    "is_paid": true,
+    "is_delivered": false,
+    "is_received": false,
+    "created_at": "2026-01-15T10:00:00Z",
+    "confirmed_at": "2026-01-15T10:05:00Z",
+    "delivered_at": null,
+    "received_at": null,
+    "updated_at": "2026-01-15T10:05:00Z",
     "items": [
         {
-            "product": 5,
+            "id": 1,
+            "product_id": 5,
+            "product_name": "Masque Baoulé",
+            "product_image": "http://127.0.0.1:8000/media/products/masque.jpg",
             "quantity": 1,
-            "unit_price": 25000
+            "unit_price": "25000",
+            "total_price": "25000",
+            "artisan_name": "Marie Artisan"
         },
         {
-            "product": 8,
+            "id": 2,
+            "product_id": 8,
+            "product_name": "Bracelet en Bronze",
+            "product_image": "http://127.0.0.1:8000/media/products/bracelet.jpg",
             "quantity": 2,
-            "unit_price": 12500
+            "unit_price": "12500",
+            "total_price": "25000",
+            "artisan_name": "Marie Artisan"
         }
     ]
 }
 ```
+
+**Statuts disponibles :**
+- `pending` : En attente
+- `paid` : Payé (confirmé)
+- `preparing` : En préparation
+- `ready_for_pickup` : Prêt pour enlèvement (mappé vers `delivering`)
+- `delivering` : En livraison
+- `delivered` : Livré
+- `cancelled` : Annulé
+
+**Documentation complète :** Voir [orders/ENDPOINTS.md](orders/ENDPOINTS.md)
 
 ---
 

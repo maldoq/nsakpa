@@ -353,14 +353,11 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                     // TODO: Naviguer vers les détails du produit
                   },
                   onFavoriteToggle: () async {
-                    final productId = product.id;
-                    final wasAlreadyFavorite = FavoritesManager.isFavorite(
-                      productId,
-                    );
+                    // Mock : Pour la démo, simuler le favori
+                    final wasAlreadyFavorite = false;
 
-                    final success = await FavoritesManager.toggleFavorite(
-                      productId,
-                    );
+                    // Simulation : alterner entre favori/pas favori
+                    final success = true;
 
                     if (success && mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(

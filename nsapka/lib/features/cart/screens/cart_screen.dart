@@ -3,7 +3,6 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/cart_item_model.dart';
 import '../../../core/models/product_model.dart';
-import '../../orders/screens/orders_list_screen.dart';
 import '../../../core/utils/cart_manager.dart';
 import '../../payment/screens/payment_screen.dart';
 import '../../../core/services/api_service.dart';
@@ -289,7 +288,7 @@ class _CartScreenState extends State<CartScreen>
                   const SizedBox(height: 4),
 
                   Text(
-                    item.product.artisanName ?? 'Artisan inconnu',
+                    item.product.artisanName,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -549,13 +548,25 @@ class _CartScreenState extends State<CartScreen>
         // ✅ Vider le panier après commande réussie
         CartManager.clearCart();
 
-        // Aller à l'écran de paiement
+        // Aller à l'écran de paiement avec toutes les infos nécessaires
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => PaymentScreen(
               amount: total,
               orderId: order['id']?.toString() ?? '',
+              cartItems: cartItems, // ✅ Articles du panier
+              deliveryAddress:
+                  'Adresse à définir', // TODO: récupérer depuis formulaire
+              deliveryPhone: '0000000000', // TODO: récupérer depuis formulaire
+              buyerName:
+                  'Client Test', // TODO: récupérer depuis profil utilisateur
+              artisanId: cartItems.isNotEmpty
+                  ? cartItems.first.product.artisanId
+                  : 'artisan_default',
+              artisanName: cartItems.isNotEmpty
+                  ? cartItems.first.product.artisanName
+                  : 'Artisan Par défaut',
             ),
           ),
         );

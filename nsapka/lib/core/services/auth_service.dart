@@ -101,7 +101,6 @@ class AuthService {
       case UserRole.delivery:
         return '/buyer-home'; // TODO: Créer interface delivery si besoin
       case UserRole.visitor:
-      default:
         return '/login';
     }
   }

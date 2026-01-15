@@ -2,13 +2,33 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/order_service.dart';
+import '../../../core/models/order_model.dart';
+import '../../../core/models/cart_item_model.dart';
 import '../../delivery/screens/delivery_tracking_screen.dart';
+import '../../orders/screens/order_confirmation_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
   final double amount;
   final String orderId;
+  final List<CartItemModel>? cartItems; // Ajout des articles
+  final String? deliveryAddress; // Ajout de l'adresse
+  final String? deliveryPhone; // Ajout du téléphone
+  final String? buyerName; // Nom du client
+  final String? artisanId; // ID de l'artisan
+  final String? artisanName; // Nom de l'artisan
 
-  const PaymentScreen({super.key, required this.amount, required this.orderId});
+  const PaymentScreen({
+    super.key,
+    required this.amount,
+    required this.orderId,
+    this.cartItems,
+    this.deliveryAddress,
+    this.deliveryPhone,
+    this.buyerName,
+    this.artisanId,
+    this.artisanName,
+  });
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -582,6 +602,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
       });
 
       if (result != null && result['success'] == true) {
+        // 🎉 CRÉER LA COMMANDE DYNAMIQUE DANS LE SYSTÈME
+        await _createDynamicOrder();
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Paiement effectué avec succès')),
         );
@@ -605,6 +628,70 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur: $e'), backgroundColor: AppColors.error),
       );
+    }
+  }
+
+  /// 🎯 CRÉER UNE COMMANDE DYNAMIQUE DANS LE SYSTÈME
+  Future<void> _createDynamicOrder() async {
+    try {
+      if (widget.cartItems == null || widget.cartItems!.isEmpty) {
+        print('❌ Pas d\'articles dans le panier');
+        return;
+      }
+
+      // Calculer le prix total
+      double totalPrice = widget.cartItems!.fold(
+        0.0,
+        (sum, item) => sum + (item.product.price * item.quantity),
+      );
+
+      // Générer ID unique pour la commande
+      String orderId = 'ORDER_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Récupérer l'utilisateur actuel
+      final currentUser = await AuthService.getCurrentUser();
+
+      // Créer la commande
+      final newOrder = OrderModel(
+        id: orderId,
+        buyerId: currentUser?.id ?? 'buyer_unknown',
+        buyerName: widget.buyerName ?? 'Client Inconnu',
+        artisanId: widget.artisanId ?? '',
+        artisanName: widget.artisanName ?? 'Artisan',
+        items: widget.cartItems!
+            .map(
+              (item) => OrderItem(
+                productId: item.product.id,
+                productName: item.product.name,
+                productImage: item.product.images.isNotEmpty
+                    ? item.product.images.first
+                    : '',
+                quantity: item.quantity,
+                price: item.product.price,
+              ),
+            )
+            .toList(),
+        subtotal: totalPrice,
+        deliveryFee: 2500.0, // Frais de livraison par défaut
+        total: totalPrice + 2500.0,
+        status: OrderStatus.pending,
+        paymentStatus: PaymentStatus.released,
+        paymentMethod: selectedMethod == 'orange_money'
+            ? 'Orange Money'
+            : selectedMethod == 'mtn_money'
+            ? 'MTN Money'
+            : 'Wave',
+        createdAt: DateTime.now(),
+        deliveryAddress: widget.deliveryAddress ?? 'Adresse non précisée',
+        deliveryPhone: widget.deliveryPhone ?? phoneController.text,
+      );
+
+      // 🚀 AJOUTER LA COMMANDE AU SERVICE CENTRAL
+      OrderService().addOrder(newOrder);
+
+      print('✅ Commande créée dynamiquement: $orderId');
+    } catch (e) {
+      print('❌ Erreur création commande: $e');
     }
   }
 
@@ -651,12 +738,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Navigator.of(context).pop(); // Fermer dialog
                 Navigator.of(context).pop(); // Retour
                 Navigator.of(context).pop(); // Retour au catalogue
-                // Aller au tracking
+                // Aller à l'écran de confirmation
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        DeliveryTrackingScreen(orderId: widget.orderId),
+                    builder: (context) => OrderConfirmationScreen(
+                      orderId: widget.orderId,
+                      amount: widget.amount,
+                    ),
                   ),
                 );
               },

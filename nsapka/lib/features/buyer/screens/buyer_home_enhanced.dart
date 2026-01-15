@@ -72,12 +72,10 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
       case 0:
         return _buildHomeTab();
       case 1:
-        return CatalogScreen(isVisitorMode: widget.isVisitorMode);
-      case 2:
         return const FavoritesScreen();
-      case 3:
+      case 2:
         return CartScreen(isVisitorMode: widget.isVisitorMode);
-      case 4:
+      case 3:
         return ProfileScreen(
           userId: _currentUser?.id,
           userRole: UserRole.buyer,
@@ -1321,10 +1319,9 @@ class _BuyerHomeEnhancedState extends State<BuyerHomeEnhanced> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.home, 'home'.tr(), 0),
-              _buildNavItem(Icons.grid_view, 'catalog'.tr(), 1),
-              _buildNavItem(Icons.favorite, 'favorites'.tr(), 2),
-              _buildNavItem(Icons.shopping_cart, 'cart'.tr(), 3),
-              _buildNavItem(Icons.person, 'profile'.tr(), 4),
+              _buildNavItem(Icons.favorite, 'favorites'.tr(), 1),
+              _buildNavItem(Icons.shopping_cart, 'cart'.tr(), 2),
+              _buildNavItem(Icons.person, 'profile'.tr(), 3),
             ],
           ),
         ),

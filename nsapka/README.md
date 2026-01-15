@@ -115,10 +115,15 @@ lib/
 - [x] Design system complet
 
 ### 🔄 À Implémenter (Backend)
-- [ ] Authentification réelle (OTP)
-- [ ] CRUD produits
-- [ ] Panier et commandes
-- [ ] Paiement Mobile Money
+- [x] **Système de commandes dynamique** (Artisan/Acheteur/Admin)
+- [x] **Gestion des statuts** (paid, preparing, delivering, delivered)
+- [x] **Confirmation de réception** (Acheteur confirme livraison)
+- [x] **API REST complète** (Django REST Framework)
+- [x] Authentification JWT
+- [x] CRUD produits
+- [x] Paiement simulé (Orange Money)
+- [ ] Authentification OTP réelle
+- [ ] Paiement Mobile Money réel (API Orange Money)
 - [ ] Messagerie temps réel
 - [ ] Notifications push
 - [ ] Géolocalisation
@@ -126,11 +131,34 @@ lib/
 
 ## 📚 Documentation
 
+### Flutter
 - [INSTRUCTIONS.md](INSTRUCTIONS.md) - Guide complet
 - [DEMARRAGE_RAPIDE.md](DEMARRAGE_RAPIDE.md) - Démarrage rapide
 - [RESUME_COMPLET.md](RESUME_COMPLET.md) - Résumé détaillé
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Architecture technique
 - [COMMANDES.txt](COMMANDES.txt) - Commandes essentielles
+
+### Backend (Django)
+- [backend/API_ENDPOINTS.md](../backend/API_ENDPOINTS.md) - Documentation API globale
+- [backend/orders/ENDPOINTS.md](../backend/orders/ENDPOINTS.md) - Endpoints commandes détaillés
+- [backend/orders/FLUTTER_INTEGRATION.md](../backend/orders/FLUTTER_INTEGRATION.md) - Intégration Flutter-Django
+- [backend/orders/TESTING.md](../backend/orders/TESTING.md) - Tests manuels des endpoints
+
+## 🔄 Système de Commandes
+
+### Workflow complet
+1. **Acheteur** : Place une commande → Paie (Orange Money simulé)
+2. **Artisan** : Reçoit notification → Confirme → Prépare → Marque prêt → Livre
+3. **Acheteur** : Confirme réception → Paiement libéré à l'artisan
+4. **Admin** : Supervise toutes les commandes
+
+### Endpoints API
+- `GET /api/orders/my/` - Mes commandes (acheteur)
+- `GET /api/orders/artisan/` - Commandes artisan
+- `PATCH /api/orders/{id}/update_status/` - Mettre à jour le statut
+- `PATCH /api/orders/{id}/confirm_received/` - Confirmer réception
+
+**Documentation complète :** Voir [backend/orders/ENDPOINTS.md](../backend/orders/ENDPOINTS.md)
 
 ## 🧪 Tests
 

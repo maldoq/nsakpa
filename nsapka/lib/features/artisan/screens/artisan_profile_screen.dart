@@ -5,6 +5,7 @@ import 'dart:convert';
 // Assurez-vous que ces imports correspondent à votre structure de dossiers
 import '../../../core/constants/app_colors.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/services/auth_service.dart';
 
 class ArtisanProfileScreen extends StatefulWidget {
   const ArtisanProfileScreen({super.key});
@@ -77,6 +78,50 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
       debugPrint("Erreur chargement: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// 🚪 Gérer la déconnexion de l'artisan
+  Future<void> _handleLogout(BuildContext context) async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Déconnexion'),
+        content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(
+              'Déconnexion',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true && mounted) {
+      try {
+        await AuthService.logout();
+
+        if (mounted) {
+          // Navigation simple et directe
+          Navigator.of(context).pushReplacementNamed('/auth');
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erreur lors de la déconnexion: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -243,18 +288,14 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
       pinned: true,
       backgroundColor: AppColors.primary,
       elevation: 0,
+      automaticallyImplyLeading:
+          false, // Désactive le bouton retour car utilisé comme onglet
       actions: [
         IconButton(
           icon: const ContainerWithBackground(icon: Icons.logout),
-          onPressed: () {
-            // Logique de déconnexion ici
-          },
+          onPressed: () => _handleLogout(context),
         ),
       ],
-      leading: IconButton(
-        icon: const ContainerWithBackground(icon: Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
-      ),
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           fit: StackFit.expand,

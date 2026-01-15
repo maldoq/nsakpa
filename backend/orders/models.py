@@ -24,6 +24,12 @@ class Order(models.Model):
     transaction_id = models.CharField(max_length=100, null=True, blank=True)
     is_paid = models.BooleanField(default=False)
     
+    # Champs pour la livraison et réception
+    is_delivered = models.BooleanField(default=False)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    is_received = models.BooleanField(default=False)
+    received_at = models.DateTimeField(null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

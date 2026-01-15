@@ -9,7 +9,7 @@ import '../../../core/services/auth_service.dart';
 import '../../../core/services/api_service.dart';
 import 'profile_settings_screen.dart';
 import 'profile_edit_screen.dart';
-import '../../orders/screens/orders_list_screen.dart';
+import '../../buyer/screens/buyer_orders_screen.dart';
 import '../../artisan/screens/artisan_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -191,7 +191,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       leading: widget.showBackButton
           ? IconButton(
               icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                // Navigation sécurisée vers l'écran précédent ou connexion
+                if (Navigator.canPop(context)) {
+                  Navigator.of(context).pop();
+                } else {
+                  // Si pas d'écran précédent, aller vers l'écran de connexion
+                  Navigator.of(
+                    context,
+                  ).pushNamedAndRemoveUntil('/auth', (route) => false);
+                }
+              },
             )
           : null,
       flexibleSpace: FlexibleSpaceBar(
@@ -777,7 +787,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const OrdersListScreen(),
+                          builder: (context) => const BuyerOrdersScreen(),
                         ),
                       );
                     },

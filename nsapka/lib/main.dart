@@ -10,6 +10,7 @@ import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/buyer/screens/buyer_home_enhanced.dart';
 import 'features/artisan/screens/artisan_home_screen.dart';
+import 'features/artisan/screens/artisan_order_management_screen.dart';
 import 'features/admin/screens/admin_home_screen.dart';
 import 'features/community_agent/screens/community_agent_home_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
@@ -19,6 +20,8 @@ import 'features/favorites/screens/favorites_screen.dart';
 import 'features/chat/screens/chat_screen_v2.dart';
 import 'features/blog/screens/blog_list_screen.dart';
 import 'features/artisans/screens/artisans_list_screen.dart';
+import 'features/test/test_order_creation.dart';
+import 'features/buyer/screens/buyer_orders_screen.dart';
 import 'core/models/user_model.dart';
 
 void main() async {
@@ -119,6 +122,7 @@ class _NSapkaAppState extends State<NSapkaApp> {
         },
         '/buyer-home': (context) => const BuyerHomeEnhanced(),
         '/artisan-home': (context) => const ArtisanHomeScreen(),
+        '/artisan-orders': (context) => const ArtisanOrderManagementScreen(),
         '/admin-home': (context) => const AdminHomeScreen(),
         '/agent-home': (context) => const CommunityAgentHomeScreen(),
         // '/profile': (context) => const ProfileScreen(userId: '', userRole: null,),
@@ -149,6 +153,10 @@ class _NSapkaAppState extends State<NSapkaApp> {
         },
         '/blog': (context) => const BlogListScreen(),
         '/artisans': (context) => const ArtisansListScreen(),
+        '/test-orders': (context) =>
+            const TestOrderCreationScreen(), // 🧪 TEST COMMANDES DYNAMIQUES
+        '/buyer-orders': (context) =>
+            const BuyerOrdersScreen(), // 🛍️ COMMANDES CLIENT
       },
 
       // Gestion des routes inconnues

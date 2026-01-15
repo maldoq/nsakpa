@@ -14,7 +14,23 @@ class OrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Order.objects.filter(buyer=self.request.user)
+        user = self.request.user
+        
+        # Si l'utilisateur est admin ou staff, retourner toutes les commandes
+        if user.is_staff or user.is_superuser:
+            return Order.objects.all().order_by('-created_at')
+        
+        # Vérifier si l'utilisateur est un artisan (a des produits)
+        if hasattr(user, 'products') and user.products.exists():
+            # Pour les artisans : retourner les commandes contenant leurs produits 
+            # ET les commandes qu'ils ont passées en tant qu'acheteur
+            from django.db.models import Q
+            return Order.objects.filter(
+                Q(buyer=user) | Q(items__artisan=user)
+            ).distinct().order_by('-created_at')
+        else:
+            # Pour les acheteurs : retourner seulement leurs commandes
+            return Order.objects.filter(buyer=user).order_by('-created_at')
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -224,3 +240,97 @@ class OrderViewSet(viewsets.ModelViewSet):
             "success": True,
             "message": "Commande annulée"
         })
+
+    @action(detail=False, methods=['get'], url_path='artisan')
+    def artisan_orders(self, request):
+        """GET /api/orders/artisan/ - Récupère les commandes d'un artisan"""
+        user = request.user
+        
+        # Récupérer toutes les commandes qui contiennent des produits de cet artisan
+        orders = Order.objects.filter(
+            items__artisan=user
+        ).distinct().order_by('-created_at')
+
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'], url_path='confirm_received')
+    def confirm_received(self, request, pk=None):
+        """PATCH /api/orders/{id}/confirm_received/ - Confirmer la réception par le client"""
+        try:
+            order = self.get_object()
+            
+            # Vérifier que l'utilisateur est l'acheteur de cette commande
+            if order.buyer != request.user:
+                return Response({
+                    'error': 'Vous ne pouvez confirmer que vos propres commandes'
+                }, status=status.HTTP_403_FORBIDDEN)
+            
+            # Vérifier que la commande est bien livrée
+            if order.status != 'delivered':
+                return Response({
+                    'error': 'La commande doit être livrée avant d\'être marquée comme reçue'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Marquer comme reçu
+            from django.utils import timezone
+            order.is_received = True
+            order.received_at = timezone.now()
+            order.save()
+            
+            # TODO: Notifier l'artisan de la réception
+            
+            # Retourner la commande mise à jour
+            serializer = self.get_serializer(order)
+            return Response({
+                'success': True,
+                'message': 'Réception confirmée avec succès',
+                'order': serializer.data
+            })
+            
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['patch'], url_path='update_status')
+    def update_status(self, request, pk=None):
+        """PATCH /api/orders/{id}/update_status/ - Met à jour le statut d'une commande"""
+        order = self.get_object()
+        new_status = request.data.get('status')
+        
+        if not new_status:
+            return Response(
+                {"error": "Le statut est requis"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Vérifier que l'utilisateur a le droit de modifier cette commande
+        # (soit c'est l'acheteur, soit c'est un artisan qui a des produits dans cette commande)
+        user = request.user
+        is_buyer = order.buyer == user
+        is_artisan = order.items.filter(artisan=user).exists()
+        
+        if not (is_buyer or is_artisan):
+            return Response(
+                {"error": "Vous n'avez pas le droit de modifier cette commande"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Mapper les statuts de Flutter vers Django
+        status_mapping = {
+            'ready_for_pickup': 'delivering',
+            'preparing': 'preparing', 
+            'delivered': 'delivered',
+            'cancelled': 'cancelled'
+        }
+        
+        mapped_status = status_mapping.get(new_status, new_status)
+        
+        # Mettre à jour le statut
+        order.status = mapped_status
+        order.save()
+        
+        # Retourner la commande mise à jour
+        serializer = self.get_serializer(order)
+        return Response(serializer.data)

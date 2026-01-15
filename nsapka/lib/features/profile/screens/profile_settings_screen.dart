@@ -189,7 +189,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   Widget _buildLanguageSelector() {
     final currentLocale = context.locale;
-    final languageName = currentLocale?.languageCode == 'fr'
+    final languageName = currentLocale.languageCode == 'fr'
         ? 'Français'
         : 'English';
 
@@ -227,7 +227,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           children: [
             ListTile(
               title: Text('french'.tr()),
-              trailing: context.locale?.languageCode == 'fr'
+              trailing: context.locale.languageCode == 'fr'
                   ? const Icon(Icons.check, color: AppColors.primary)
                   : null,
               onTap: () async {
@@ -237,7 +237,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             ),
             ListTile(
               title: Text('english'.tr()),
-              trailing: context.locale?.languageCode == 'en'
+              trailing: context.locale.languageCode == 'en'
                   ? const Icon(Icons.check, color: AppColors.primary)
                   : null,
               onTap: () async {

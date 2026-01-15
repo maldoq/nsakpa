@@ -917,7 +917,7 @@ class _ArtisansListScreenState extends State<ArtisansListScreen>
       case OrderStatus.pending:
         return AppColors.warning;
       case OrderStatus.confirmed:
-        return AppColors.info ?? AppColors.primary;
+        return AppColors.info;
       case OrderStatus.preparing:
         return AppColors.accent;
       case OrderStatus.readyForPickup:
