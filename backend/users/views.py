@@ -75,7 +75,8 @@ def login_view(request):
     return Response({
         'refresh': str(refresh),
         'token': str(refresh.access_token),
-        'user': UserSerializer(user_obj).data
+        'user': UserSerializer(user_obj).data,
+        'role': user_obj.role  # Ajout du rôle pour automatiser la redirection côté frontend
     })
 
 

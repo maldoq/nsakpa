@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'orders',
     'social',
     'drf_spectacular',
+    'drf_yasg',
+
 ]
 
 MIDDLEWARE = [
@@ -160,14 +162,9 @@ CSRF_TRUSTED_ORIGINS = [
 # En développement, on peut aussi désactiver CSRF pour les APIs
 # (à ne PAS faire en production !)
 if DEBUG:
-    REST_FRAMEWORK = {
-        'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework_simplejwt.authentication.JWTAuthentication',
-        ),
-        'DEFAULT_PERMISSION_CLASSES': [
-            'rest_framework.permissions.IsAuthenticated',
-        ],
-    }
+    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
     # Exemption complète du CSRF pour toutes les requêtes en dev
     CSRF_COOKIE_SECURE = False
     CSRF_COOKIE_HTTPONLY = False
